@@ -1,29 +1,45 @@
 package com.example.ishanfx.departmentapp;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
+import android.text.Editable;
+import android.text.method.KeyListener;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.ishanfx.departmentapp.database.RealMAdapter;
 import com.example.ishanfx.departmentapp.network.NetworkAdapter;
 
 import org.json.JSONObject;
 
+import java.net.Inet4Address;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by IshanFx on 2/5/2016.
  */
-public class ProtectService extends Service {
+public class ProtectService extends Service  {
     private static final String TAG = "BroadcastService";
     public static final String BROADCAST_ACTION = "com.example.ishanfx.departmentapp";
     private final Handler handler = new Handler();
@@ -33,17 +49,12 @@ public class ProtectService extends Service {
     static int localCaseCount;
     static int remoteCaseCount;
     public static int c = 1;
-    public String msg = "ss";
+    public String notificationState = "ss";
 
     @Override
     public void onCreate() {
         intent = new Intent(BROADCAST_ACTION);
         queue = Volley.newRequestQueue(getApplicationContext());
-    }
-
-    @Override
-    public void onStart(Intent intent, int startId) {
-
     }
 
 
@@ -57,14 +68,16 @@ public class ProtectService extends Service {
     private void DisplayLoggingInfo() {
         RealMAdapter realMAdapter = new RealMAdapter(getApplicationContext());
         localCaseCount = realMAdapter.casecount();
+
         Toast.makeText(getApplicationContext(), "Local:" + String.valueOf(localCaseCount), Toast.LENGTH_SHORT).show();
 
         // Log.d(TAG, "entered DisplayLoggingInfo");
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, NetworkAdapter.url_getopencasecount, new Response.Listener<JSONObject>() {
+        StringRequest request = new StringRequest(Request.Method.POST, NetworkAdapter.url_getopencasecount, new Response.Listener<String>() {
             @Override
-            public void onResponse(JSONObject response) {
+            public void onResponse(String response) {
                 try {
-                    remoteCaseCount = response.getInt("casecount");
+                    JSONObject jsonObject = new JSONObject(response);
+                    remoteCaseCount = Integer.parseInt(jsonObject.getString("casecount"));
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -73,25 +86,40 @@ public class ProtectService extends Service {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                msg = "1";
-                // Toast.makeText(MainActivity.this, "Responce error", Toast.LENGTH_SHORT).show();
+
             }
-        });
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Log.d("Dip", "Dip start");
+                Map<String, String> parameters = new HashMap<String, String>();
+                parameters.put("ownerid","1");
+                return parameters;
+            }
+        };
         queue.add(request);
+
         Toast.makeText(getApplicationContext(), "Remote:" + remoteCaseCount, Toast.LENGTH_SHORT).show();
-        if (localCaseCount < remoteCaseCount) {
-            msg = "visible";
+
+        if (localCaseCount < remoteCaseCount)
+        {
+            notificationState = "visible";
             realMAdapter.loadNewData();
-        } else {
-            if (msg.equals("1")) {
-                msg = "Error";
-            } else
-                msg = "invisible";
         }
+
+        else
+        {
+            if (notificationState.equals("1")) {
+                notificationState = "Please Refresh";
+            } else
+                notificationState = "invisible";
+        }
+
         //Toast.makeText(MainActivity.this,"Finish",Toast.LENGTH_SHORT).show();
 
         intent.putExtra("time", new Date().toLocaleString());
-        intent.putExtra("counter", msg);
+        intent.putExtra("counter", notificationState);
+
         sendBroadcast(intent);
     }
 
@@ -123,4 +151,7 @@ public class ProtectService extends Service {
         Toast.makeText(getApplicationContext(), "stop Service", Toast.LENGTH_SHORT).show();
 
     }
+
+
+
 }

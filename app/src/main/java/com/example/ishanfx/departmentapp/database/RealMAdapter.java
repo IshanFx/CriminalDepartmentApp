@@ -3,18 +3,26 @@ package com.example.ishanfx.departmentapp.database;
 import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.util.Log;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.ishanfx.departmentapp.Crime;
 import com.example.ishanfx.departmentapp.network.NetworkAdapter;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -39,18 +47,29 @@ public class RealMAdapter  {
                 );
 
         // Create an object
-
     }
+    public List<Crime> getDummy(){
+        List<Crime> list = new ArrayList<>();
+        RealmResults<Crime> results = protectRMDB.where(Crime.class).findAll();
+        for (Crime s:results
+                ){
+            list.add(s);
+            Log.d("Dummy", s.toString());
+            break;
+        }
+        return  list;
+    }
+
     public Integer getType(Integer caseid){
          Crime re =  protectRMDB.where(Crime.class)
-                .equalTo("caseid",caseid)
+                .equalTo("caseid", caseid)
                 .findFirst();
         return re.getCaseid();
     }
 
     public Crime getAllData(Integer caseid){
         Crime crime = protectRMDB.where(Crime.class)
-                .equalTo("caseid",caseid)
+                .equalTo("caseid", caseid)
                 .findFirst();
 
         return crime;
@@ -69,6 +88,19 @@ public class RealMAdapter  {
         return crimedata;
     }
 
+    public void insertData(Crime crime){
+        protectRMDB.beginTransaction();
+        Crime crimescene = protectRMDB.createObject(Crime.class);
+        // Set its fields
+        crimescene.setCaseid(crime.getCaseid());
+        crimescene.setType(crime.getType());
+        crimescene.setDate(crime.getDate());
+        crimescene.setStatus(crime.getStatus());
+        crimescene.setLatitude(crime.getLatitude());
+        crimescene.setLongitude(crime.getLongitude());
+        protectRMDB.commitTransaction();
+        Log.d("Dummy", String.valueOf(crime.getCaseid()));
+    }
 
     public void removeData(){
         RealmResults<Crime> results = protectRMDB.where(Crime.class).findAll();
@@ -79,7 +111,9 @@ public class RealMAdapter  {
     }
 
     public void loadNewData(){
-
+        removeData();
+        new CaseAsync().execute();
+/*
             queue = Volley.newRequestQueue(context);
             JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, NetworkAdapter.url_getopencases, new Response.Listener<JSONObject>() {
             @Override
@@ -121,50 +155,87 @@ public class RealMAdapter  {
                 // Toast.makeText(MainActivity.this, "Responce error", Toast.LENGTH_SHORT).show();
             }
         });
-        queue.add(request);
+        queue.add(request);*/
       /*  CaseAsync caseAsync  = new CaseAsync();
         caseAsync.execute();*/
     }
 
-    public class CaseAsync extends AsyncTask<Void,Void,Void>{
+    public class CaseAsync extends AsyncTask<Void,Crime,Void>{
+
+
         @Override
         protected Void doInBackground(Void... params) {
-            queue = Volley.newRequestQueue(context);
-            JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, NetworkAdapter.url_getopencases, new Response.Listener<JSONObject>() {
-                @Override
-                public void onResponse(JSONObject response) {
-                    try {
-                        JSONArray jsonArray = response.getJSONArray("opencase");
-                        Number maxCaseNo  =
-                                protectRMDB.where(Crime.class)
-                                .max("caseid");
+            synchronized (this) {
+                queue = Volley.newRequestQueue(context);
+                StringRequest stringRequest = new StringRequest(Request.Method.POST, NetworkAdapter.url_getopencases, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject crimejsonObject =  new JSONObject(response);
+                            JSONArray jsonArray = crimejsonObject.getJSONArray("opencase");
+                           // Integer localcasecount = casecount();
+                           // Integer remotecasecount = jsonArray.length();
 
-                        for (int i = 0; i < jsonArray.length(); i++) {
-                            JSONObject jsonObject = jsonArray.getJSONObject(i);
-                            if(maxCaseNo.intValue()<jsonObject.getInt("id")){
-                                protectRMDB.beginTransaction();
-                                Crime crime = protectRMDB.createObject(Crime.class);
-                                // Set its fields
-                                    crime.setCaseid(jsonObject.getInt("id"));
+                          //  if(localcasecount<=remotecasecount){
+                                for (int i = 0; i < jsonArray.length(); i++) {
+                                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                                    Crime crime = new Crime();
+                                    crime.setCaseid(jsonObject.getInt("crimeid"));
                                     crime.setType(jsonObject.getString("type"));
                                     crime.setDate(jsonObject.getString("date"));
-                                protectRMDB.commitTransaction();
-                            }
-                        }
-                       response.getString("casecount");
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
+                                    crime.setStatus(jsonObject.getString("status"));
+                                    crime.setLatitude(jsonObject.getString("latitude"));
+                                    crime.setLongitude(jsonObject.getString("longitude"));
+                                    publishProgress(crime);
+                                }
+                           // }
+                          /*  for (int i = 0; i < jsonArray.length(); i++) {
+                                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                                RealmResults<Crime> checklocalData = protectRMDB.where(Crime.class)
+                                        .equalTo("caseid", jsonObject.getInt("crimeid"))
+                                        .findAll();
 
-                    // Toast.makeText(MainActivity.this, "Responce error", Toast.LENGTH_SHORT).show();
-                }
-            });
-            queue.add(request);
+                                if (checklocalData.isEmpty()) {
+                                    protectRMDB.beginTransaction();
+                                    Crime crime = protectRMDB.createObject(Crime.class);
+                                    // Set its fields
+                                    crime.setCaseid(jsonObject.getInt("crimeid"));
+                                    crime.setType(jsonObject.getString("type"));
+                                    crime.setDate(jsonObject.getString("date"));
+                                    crime.setStatus(jsonObject.getString("status"));
+                                    crime.setLatitude(jsonObject.getString("latitude"));
+                                    crime.setLongitude(jsonObject.getString("longitude"));
+                                    protectRMDB.commitTransaction();
+                                }
+                            }*/
+
+                            //response.getString("casecount");
+                        } catch (Exception e) {
+
+                        }
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                }) {
+                    @Override
+                    protected Map<String, String> getParams() throws AuthFailureError {
+                        Log.d("Dip","Dip start");
+                        Map<String, String> parameters = new HashMap<String, String>();
+                        parameters.put("ownerid","1");
+                        return parameters;
+                    }
+                };
+                queue.add(stringRequest);
+            }
             return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Crime... values) {
+            insertData(values[0]);
         }
     }
 }

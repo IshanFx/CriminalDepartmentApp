@@ -23,4 +23,11 @@
         <item name="android:padding">10dp</item>
         <item name="android:layout_height">match_parent</item>
     </style>
+    <style name="listStyle">
+        <item name="android:layout_marginLeft">120dp</item>
+        <item name="android:textSize">20dp</item>
+        <item name="android:textColor">@color/listfont</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:text">hello</item>
+    </style>
 </resources>

@@ -12,9 +12,9 @@
     tools:context="com.example.ishanfx.departmentapp.DetailActivity"
     tools:showIn="@layout/activity_detail">
     <TableLayout
-
+        android:id="@+id/tblDetails"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
+        android:layout_height="wrap_content">
 
         <TableRow
 
@@ -105,22 +105,27 @@
         <TableRow
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"/>
-        <TableRow
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent">
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/btn_assign"
-                android:id="@+id/btnAssign"
-                android:layout_column="2" />
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/btn_followmap"
-                android:id="@+id/btnMap"
-                android:layout_column="3" />
-        </TableRow>
+
+
 
     </TableLayout>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_assign"
+        android:id="@+id/btnAssign"
+        android:onClick="ownerAssign"
+        android:layout_marginLeft="50dp"
+        android:layout_below="@+id/tblDetails"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_followmap"
+        android:id="@+id/btnMap"
+        android:onClick="showMap"
+        android:layout_alignBaseline="@+id/btnAssign"
+        android:layout_toRightOf="@+id/btnAssign"
+        android:layout_toEndOf="@+id/btnAssign"
+        android:layout_marginLeft="30dp"
+        />
 </RelativeLayout>
