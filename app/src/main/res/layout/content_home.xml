@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/darkmate"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.example.ishanfx.departmentapp.HomeActivity"
     tools:showIn="@layout/activity_home">
@@ -23,8 +24,6 @@
         android:divider="@color/listdivider"
         />
 </android.support.v4.widget.SwipeRefreshLayout>
-
-
 
     <EditText
         android:layout_width="match_parent"

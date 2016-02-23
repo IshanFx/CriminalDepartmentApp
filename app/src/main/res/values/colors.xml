@@ -5,6 +5,9 @@
     <color name="colorAccent">#FF4081</color>
 
     <color name="listback">#DDE1E7</color>
-    <color name="listdivider">#979E9F</color>
+    <color name="listdivider">#EF3131</color>
     <color name="listfont">#232445</color>
+    <color name="mainfont">#fff</color>
+
+    <color name="darkmate">#333333</color>
 </resources>

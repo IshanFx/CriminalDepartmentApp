@@ -19,15 +19,26 @@
 
     <style name="casedetails">
         <item name="android:minHeight">50dp</item>
-        <item name="android:textSize">30dp</item>
+
         <item name="android:padding">10dp</item>
         <item name="android:layout_height">match_parent</item>
+    </style>
+    <style name="listtext">
+        <item name="android:textSize">20dp</item>
+        <item name="android:textStyle">bold</item>
     </style>
     <style name="listStyle">
         <item name="android:layout_marginLeft">120dp</item>
         <item name="android:textSize">20dp</item>
-        <item name="android:textColor">@color/listfont</item>
+        <item name="android:textColor">@color/mainfont</item>
         <item name="android:textStyle">bold</item>
         <item name="android:text">hello</item>
+    </style>
+
+    <style name="detailmenubtn">
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="android:textColor">@color/mainfont</item>
+        <item name="android:padding">15px</item>
+        <item name="android:textStyle">bold</item>
     </style>
 </resources>

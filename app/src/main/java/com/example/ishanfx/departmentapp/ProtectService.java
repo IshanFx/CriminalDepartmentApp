@@ -70,9 +70,8 @@ public class ProtectService extends Service  {
         localCaseCount = realMAdapter.casecount();
 
         Toast.makeText(getApplicationContext(), "Local:" + String.valueOf(localCaseCount), Toast.LENGTH_SHORT).show();
-
         // Log.d(TAG, "entered DisplayLoggingInfo");
-        StringRequest request = new StringRequest(Request.Method.POST, NetworkAdapter.url_getopencasecount, new Response.Listener<String>() {
+            StringRequest request = new StringRequest(Request.Method.POST, NetworkAdapter.url_getopencasecount, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 try {

@@ -161,8 +161,6 @@ public class RealMAdapter  {
     }
 
     public class CaseAsync extends AsyncTask<Void,Crime,Void>{
-
-
         @Override
         protected Void doInBackground(Void... params) {
             synchronized (this) {
@@ -173,10 +171,10 @@ public class RealMAdapter  {
                         try {
                             JSONObject crimejsonObject =  new JSONObject(response);
                             JSONArray jsonArray = crimejsonObject.getJSONArray("opencase");
-                           // Integer localcasecount = casecount();
-                           // Integer remotecasecount = jsonArray.length();
+                           /* Integer localcasecount = casecount();
+                            Integer remotecasecount = jsonArray.length();
 
-                          //  if(localcasecount<=remotecasecount){
+                            if(localcasecount<=remotecasecount){
                                 for (int i = 0; i < jsonArray.length(); i++) {
                                     JSONObject jsonObject = jsonArray.getJSONObject(i);
                                     Crime crime = new Crime();
@@ -186,10 +184,10 @@ public class RealMAdapter  {
                                     crime.setStatus(jsonObject.getString("status"));
                                     crime.setLatitude(jsonObject.getString("latitude"));
                                     crime.setLongitude(jsonObject.getString("longitude"));
-                                    publishProgress(crime);
+                                    insertData(crime);
                                 }
-                           // }
-                          /*  for (int i = 0; i < jsonArray.length(); i++) {
+                            }*/
+                            for (int i = 0; i < jsonArray.length(); i++) {
                                 JSONObject jsonObject = jsonArray.getJSONObject(i);
                                 RealmResults<Crime> checklocalData = protectRMDB.where(Crime.class)
                                         .equalTo("caseid", jsonObject.getInt("crimeid"))
@@ -207,7 +205,7 @@ public class RealMAdapter  {
                                     crime.setLongitude(jsonObject.getString("longitude"));
                                     protectRMDB.commitTransaction();
                                 }
-                            }*/
+                            }
 
                             //response.getString("casecount");
                         } catch (Exception e) {
@@ -235,7 +233,7 @@ public class RealMAdapter  {
 
         @Override
         protected void onProgressUpdate(Crime... values) {
-            insertData(values[0]);
+
         }
     }
 }

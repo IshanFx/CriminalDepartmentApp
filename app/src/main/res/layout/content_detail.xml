@@ -8,25 +8,27 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.example.ishanfx.departmentapp.DetailActivity"
     tools:showIn="@layout/activity_detail">
     <TableLayout
         android:id="@+id/tblDetails"
         android:layout_width="fill_parent"
+        android:padding="10dp"
         android:layout_height="wrap_content">
-
         <TableRow
-
             style="@style/casedetails"
            >
             <TextView
+                style="@style/listtext"
                 android:text="@string/tbllay_caseid"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_column="1" />
             <TextView
-                android:text="1"
+                style="@style/listtext"
+
                 android:id="@+id/txtCaseID"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -37,11 +39,13 @@
             style="@style/casedetails"
             >
             <TextView
+                style="@style/listtext"
                 android:text="@string/tbllay_type"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_column="1" />
             <TextView
+                style="@style/listtext"
                 android:id="@+id/txtType"
                 android:width="200px"
                 android:layout_width="wrap_content"
@@ -52,25 +56,44 @@
             style="@style/casedetails"
             >
             <TextView
+                style="@style/listtext"
                 android:text="@string/tbllay_date"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_column="1" />
             <TextView
+                style="@style/listtext"
                 android:id="@+id/txtDate"
                 android:width="100px"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </TableRow>
-
+        <TableRow
+            style="@style/casedetails"
+            >
+            <TextView
+                style="@style/listtext"
+                android:text="@string/tbllay_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_column="1" />
+            <TextView
+                style="@style/listtext"
+                android:id="@+id/txtTime"
+                android:width="100px"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </TableRow>
         <TableRow
             style="@style/casedetails">
             <TextView
+                style="@style/listtext"
                 android:text="@string/tbllay_latitude"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_column="1" />
             <TextView
+                style="@style/listtext"
                 android:id="@+id/txtLatitude"
                 android:width="100px"
                 android:layout_width="wrap_content"
@@ -79,11 +102,13 @@
         <TableRow
             style="@style/casedetails">
             <TextView
+                style="@style/listtext"
                 android:text="@string/tbllay_longitude"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_column="1" />
             <TextView
+                style="@style/listtext"
                 android:id="@+id/txtLongitude"
                 android:width="100px"
                 android:layout_width="wrap_content"
@@ -93,12 +118,14 @@
             style="@style/casedetails">
             <TextView
                 android:text="@string/tbllay_status"
+                style="@style/listtext"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_column="1" />
             <TextView
                 android:id="@+id/txtStatus"
                 android:width="100px"
+                style="@style/listtext"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </TableRow>
@@ -115,7 +142,8 @@
         android:text="@string/btn_assign"
         android:id="@+id/btnAssign"
         android:onClick="ownerAssign"
-        android:layout_marginLeft="50dp"
+        android:layout_alignParentLeft="true"
+        style="@style/detailmenubtn"
         android:layout_below="@+id/tblDetails"/>
     <Button
         android:layout_width="wrap_content"
@@ -124,8 +152,18 @@
         android:id="@+id/btnMap"
         android:onClick="showMap"
         android:layout_alignBaseline="@+id/btnAssign"
-        android:layout_toRightOf="@+id/btnAssign"
-        android:layout_toEndOf="@+id/btnAssign"
-        android:layout_marginLeft="30dp"
+        android:layout_alignParentRight="true"
+        style="@style/detailmenubtn"
         />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_navigation"
+        android:id="@+id/button"
+        android:onClick="showNavigation"
+        android:layout_below="@+id/tblDetails"
+        android:layout_centerHorizontal="true"
+        style="@style/detailmenubtn"
+         />
 </RelativeLayout>

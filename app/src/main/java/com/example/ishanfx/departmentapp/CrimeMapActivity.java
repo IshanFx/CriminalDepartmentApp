@@ -30,6 +30,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -46,7 +47,10 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
     LocationRequest mLocationRequest;
     RequestQueue queue;
     Integer caseid=0;
-    static Crime crime  = new Crime();
+    static Crime crime;
+
+    static float c=21,x=57;
+
     private GoogleApiClient mGoogleApiClient;
 
     @Override
@@ -54,12 +58,16 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_crime_map);
         setUpMapIfNeeded();
+        crime = new Crime();
         crime.setLatitude("6.9124745");
         crime.setLongitude("79.861436");
         locationManager =
                 (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         buildGoogleApiClient();
         createLocationRequest();
+       /* mLastLocation.setLatitude(Double.parseDouble(crime.getLatitude()));
+        mLastLocation.setLongitude(Double.parseDouble(crime.getLongitude()));*/
+        //setUpMap();
     }
 
     @Override
@@ -96,8 +104,9 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
             if (mMap != null) {
                 try{
                     setUpMap();
+                 //   mMap.setMyLocationEnabled(true);
                 }  catch (Exception ex){
-                    mMap.setMyLocationEnabled(true);
+
 
                 }
             }
@@ -111,15 +120,28 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
     private void setUpMap() {
-        if(mLastLocation!=null) {
-            mMap.clear();
+        //if(mLastLocation!=null) {
+            final LatLng TutorialsPoint = new LatLng(21 , 57);
+            PolylineOptions polylineOptions = new PolylineOptions()
+                .add(new LatLng(21 , 57))
+                .add(new LatLng(21,58));
            // mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude())).title("1"));
-            mMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(crime.getLatitude()), Double.parseDouble(crime.getLongitude()))).title("1"));
-            Toast.makeText(this, mLastLocation.getLatitude() + " " + mLastLocation.getLongitude(), Toast.LENGTH_SHORT).show();
-        }
+           // mMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(crime.getLatitude()), Double.parseDouble(crime.getLongitude()))).title("1"));
+           // mMap.addPolyline(polylineOptions);
+           // mMap.addMarker(new MarkerOptions().position(TutorialsPoint).title("1"));
+            Toast.makeText(this,"Lati"+ crime.getLatitude() + " Long" + crime.getLongitude() , Toast.LENGTH_SHORT).show();
+       new Thread(new Runnable() {
+            @Override
+            public void run() {
+                mMap.addMarker(new MarkerOptions().position(TutorialsPoint).title("6"));
+            }
+        }).start();
+
+
+       /* }
         else{
             Toast.makeText(this,"Cannot get details",Toast.LENGTH_SHORT).show();
-        }
+        }*/
     }
 
     @Override
@@ -135,7 +157,7 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
     @Override
     public void onLocationChanged(Location location) {
         mLastLocation = location;
-        setUpMap();
+      //  setUpMap();
     }
 
     @Override

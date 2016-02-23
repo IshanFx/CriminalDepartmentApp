@@ -31,58 +31,77 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DetailActivity extends AppCompatActivity {
-    TextView txtCaseID,txtType,txtDate,txtStatus,txtLongitude,txtLatitude;
-    Button btnFollowMap,btnAssign;
-    Integer caseid=0;
+    TextView txtCaseID, txtType, txtDate, txtStatus, txtLongitude, txtLatitude, txtTime;
+    Button btnFollowMap, btnAssign;
+    Integer caseid = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        String caseid =  getIntent().getStringExtra("caseid");
+        String caseid = getIntent().getStringExtra("caseid");
 
         txtCaseID = (TextView) findViewById(R.id.txtCaseID);
-        txtType   = (TextView) findViewById(R.id.txtType);
-        txtDate   = (TextView) findViewById(R.id.txtDate);
+        txtType = (TextView) findViewById(R.id.txtType);
+        txtDate = (TextView) findViewById(R.id.txtDate);
         txtLatitude = (TextView) findViewById(R.id.txtLatitude);
         txtLongitude = (TextView) findViewById(R.id.txtLongitude);
         txtStatus = (TextView) findViewById(R.id.txtStatus);
-
+        txtTime = (TextView) findViewById(R.id.txtTime);
 
         getCrimeData(Integer.parseInt(caseid));
 
     }
 
     private void getCrimeData(Integer caseid) {
+        String caseType = "";
         RealMAdapter realMAdapter = new RealMAdapter(getApplicationContext());
         Crime crime = realMAdapter.getAllData(caseid);
-
+        String dateTime = new String(crime.getDate());
+        String dateTimeArray[] = dateTime.split("\\s+");
+        switch (crime.getType()){
+            case "E":
+                caseType="Evidence";
+                break;
+            case "R":
+                caseType = "Robbery";
+                break;
+            case "K":
+                caseType = "Kidnap";
+                break;
+        }
         txtCaseID.setText(String.valueOf(crime.getCaseid()));
-        txtType.setText(crime.getType());
+        txtType.setText(caseType);
         txtStatus.setText(crime.getStatus());
+        txtDate.setText(dateTimeArray[0].toString());
+        txtTime.setText(dateTimeArray[1].toString());
         txtLongitude.setText(crime.getLongitude());
         txtLatitude.setText(crime.getLatitude());
         this.caseid = crime.getCaseid();
     }
 
     public void showMap(View view) {
-        Intent intent = new Intent(this,CrimeMapActivity.class);
+        Intent intent = new Intent(this, CrimeMapActivity.class);
         startActivity(intent);
-           /*     Uri gmmIntentUri = Uri.parse("google.navigation:q="+txtLatitude.getText().toString()+","+txtLongitude.getText().toString() );
-
-                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
-                mapIntent.setPackage("com.google.android.apps.maps");
-                if (mapIntent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(mapIntent);
-                }*/
     }
 
     public void ownerAssign(View view) {
         new DetailAsync().execute();
     }
 
-    class  DetailAsync extends AsyncTask<Void,Void,Void> {
+    public void showNavigation(View view) {
+        Uri gmmIntentUri = Uri.parse("google.navigation:q=" +Double.parseDouble(txtLatitude.getText().toString()) + "," +Double.parseDouble(txtLongitude.getText().toString()));
+
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+        mapIntent.setPackage("com.google.android.apps.maps");
+        if (mapIntent.resolveActivity(getPackageManager()) != null) {
+            startActivity(mapIntent);
+        }
+    }
+
+    class DetailAsync extends AsyncTask<Void, Void, Void> {
 
         @Override
         protected Void doInBackground(Void... params) {
@@ -90,13 +109,12 @@ public class DetailActivity extends AppCompatActivity {
             StringRequest request = new StringRequest(Request.Method.POST, NetworkAdapter.url_setAssign, new Response.Listener<String>() {
                 @Override
                 public void onResponse(String response) {
-                    try{
+                    try {
                         JSONObject resposeJSON = new JSONObject(response);
-                        if(resposeJSON.names().get(0).equals("status")){
+                        if (resposeJSON.names().get(0).equals("status")) {
 
                         }
-                    }
-                    catch(Exception ex){
+                    } catch (Exception ex) {
 
                     }
                 }
@@ -112,7 +130,7 @@ public class DetailActivity extends AppCompatActivity {
                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
                     Map<String, String> parameters = new HashMap<String, String>();
-                    parameters.put("caseid",String.valueOf( caseid));
+                    parameters.put("caseid", String.valueOf(caseid));
 
                     return parameters;
                 }
@@ -125,7 +143,7 @@ public class DetailActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
 
-             Toast.makeText(getApplicationContext(),"Successfully Added",Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Successfully Added", Toast.LENGTH_SHORT).show();
 
         }
     }

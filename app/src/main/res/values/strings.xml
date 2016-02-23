@@ -8,11 +8,13 @@
     <string name="tbllay_caseid">Case ID</string>
     <string name="tbllay_type">Type</string>
     <string name="tbllay_date">Date</string>
+    <string name="tbllay_time">Time</string>
     <string name="tbllay_latitude">Latitude</string>
     <string name="tbllay_longitude">Longitude</string>
     <string name="tbllay_status">Status</string>
 
-    <string name="btn_followmap">Follow Map</string>
+    <string name="btn_followmap">Show Map</string>
     <string name="btn_assign">Assign</string>
+    <string name="btn_navigation">Navigation</string>
     <string name="title_activity_crime_map">Map</string>
 </resources>

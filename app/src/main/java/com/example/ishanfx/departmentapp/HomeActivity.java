@@ -74,6 +74,7 @@ public class HomeActivity extends AppCompatActivity {
     ArrayAdapter<Crime> adapter;
     List<Crime> crimeLocalList;
     DepHomeAdapter depHomeAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -104,19 +105,10 @@ public class HomeActivity extends AppCompatActivity {
             crimeList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                     Crime crime = (Crime) crimeList.getItemAtPosition(position);
-                     Toast.makeText(getApplicationContext(),String.valueOf(crime.getCaseid()),Toast.LENGTH_SHORT).show();
+                    Crime crime = (Crime) crimeList.getItemAtPosition(position);
                     Intent intent = new Intent(getApplicationContext(), DetailActivity.class);
                     intent.putExtra("caseid", String.valueOf(crime.getCaseid()));
                     startActivity(intent);
-                /*Uri gmmIntentUri = Uri.parse("google.navigation:q=6.9058123,79.9095672");
-               // Uri gmmIntentUri = Uri.parse("google.navigation:q=6.8727581,79.8814815(Ishan)&mode=d");
-                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
-                mapIntent.setPackage("com.google.android.apps.maps");
-                if (mapIntent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(mapIntent);
-                }*/
-
                 }
             });
             swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -132,7 +124,6 @@ public class HomeActivity extends AppCompatActivity {
                     android.R.color.holo_green_light,
                     android.R.color.holo_orange_light,
                     android.R.color.holo_red_light);
-
         }
         catch(Exception ex){
              Toast.makeText(getApplicationContext(),ex.getMessage(),Toast.LENGTH_SHORT).show();
@@ -173,12 +164,6 @@ public class HomeActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             updateUI(intent);
-            if (Intent.ACTION_MEDIA_BUTTON.equals(intent.getAction())) {
-                KeyEvent event = (KeyEvent)intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
-                if (KeyEvent.KEYCODE_VOLUME_DOWN == event.getKeyCode()) {
-                    Toast.makeText(getApplicationContext(),"Volume",Toast.LENGTH_SHORT).show();
-                }
-            }
         }
     };
 
@@ -187,7 +172,7 @@ public class HomeActivity extends AppCompatActivity {
         if(keyCode==KeyEvent.KEYCODE_VOLUME_DOWN){
             NotificationCompat.Builder mBuilder =
                     new NotificationCompat.Builder(this)
-                            .setSmallIcon(R.drawable.location)
+                            .setSmallIcon(R.drawable.run)
                             .setVibrate(new long[]{1000,1000,1000})
                             .setContentTitle("Volume Press")
                             .setContentText("OOPS");
@@ -231,7 +216,7 @@ public class HomeActivity extends AppCompatActivity {
         if(counter.equals("visible")) {
             NotificationCompat.Builder mBuilder =
                     new NotificationCompat.Builder(this)
-                            .setSmallIcon(R.drawable.location)
+                            .setSmallIcon(R.drawable.run)
                             .setVibrate(new long[]{1000,1000,1000})
                             .setContentTitle("New Crime Happen")
                             .setContentText(counter);
@@ -359,7 +344,9 @@ public class HomeActivity extends AppCompatActivity {
     }
 
 
-
+    /*
+    * Adapter to add list view
+    * */
     class DepHomeAdapter extends ArrayAdapter<Crime> {
         Context context;
         List<Crime> objects;
@@ -374,6 +361,8 @@ public class HomeActivity extends AppCompatActivity {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             Crime crime = objects.get(position);
+            String dateTime = new String(crime.getDate());
+            String DT[] = dateTime.split("\\s+");
             String caseName="";
             Log.d("Dummy", crime.toString());
             LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
@@ -383,8 +372,8 @@ public class HomeActivity extends AppCompatActivity {
             TextView txtType  = (TextView) view.findViewById(R.id.txtType);
             ImageView img = (ImageView) view.findViewById(R.id.imgIcon);
             int res = 0;
-            txt.setText("Case ID "+String.valueOf(crime.getCaseid()));
-            txtDate.setText(crime.getDate());
+            txt.setText("Time: "+DT[1].toString());
+            txtDate.setText("Date: "+DT[0].toString());
             switch (crime.getType()){
                 case "E":
                     caseName="Evidence";
@@ -400,7 +389,6 @@ public class HomeActivity extends AppCompatActivity {
                     break;
             }
             txtType.setText(caseName);
-
             img.setImageResource(res);
             return view;
         }
