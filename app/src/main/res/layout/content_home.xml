@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/darkmate"
+    android:background="@color/mainfont"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.example.ishanfx.departmentapp.HomeActivity"
     tools:showIn="@layout/activity_home">
@@ -20,8 +20,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@android:id/list"
-        android:dividerHeight="1dp"
-        android:divider="@color/listdivider"
+
+
         />
 </android.support.v4.widget.SwipeRefreshLayout>
 

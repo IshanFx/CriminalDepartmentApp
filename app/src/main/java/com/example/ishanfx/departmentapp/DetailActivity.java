@@ -4,8 +4,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -50,7 +48,8 @@ public class DetailActivity extends AppCompatActivity {
         txtLongitude = (TextView) findViewById(R.id.txtLongitude);
         txtStatus = (TextView) findViewById(R.id.txtStatus);
         txtTime = (TextView) findViewById(R.id.txtTime);
-
+        android.support.v7.app.ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
         getCrimeData(Integer.parseInt(caseid));
 
     }
@@ -84,7 +83,10 @@ public class DetailActivity extends AppCompatActivity {
 
     public void showMap(View view) {
         Intent intent = new Intent(this, CrimeMapActivity.class);
+        intent.putExtra("LATITUDE",txtLatitude.getText());
+        intent.putExtra("LONGITUDE",txtLongitude.getText());
         startActivity(intent);
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
     public void ownerAssign(View view) {
@@ -92,7 +94,7 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     public void showNavigation(View view) {
-        Uri gmmIntentUri = Uri.parse("google.navigation:q=" +Double.parseDouble(txtLatitude.getText().toString()) + "," +Double.parseDouble(txtLongitude.getText().toString()));
+        Uri gmmIntentUri = Uri.parse("google.navigation:q="+Double.parseDouble(txtLatitude.getText().toString())+","+Double.parseDouble(txtLongitude.getText().toString()));
 
         Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
         mapIntent.setPackage("com.google.android.apps.maps");
@@ -111,7 +113,7 @@ public class DetailActivity extends AppCompatActivity {
                 public void onResponse(String response) {
                     try {
                         JSONObject resposeJSON = new JSONObject(response);
-                        if (resposeJSON.names().get(0).equals("status")) {
+                        if (resposeJSON.names().get(0).equals("status") ) {
 
                         }
                     } catch (Exception ex) {
@@ -146,5 +148,11 @@ public class DetailActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), "Successfully Added", Toast.LENGTH_SHORT).show();
 
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
     }
 }

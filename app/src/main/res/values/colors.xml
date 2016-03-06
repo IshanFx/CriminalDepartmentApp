@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#EF3131</color>
+   <!-- <color name="colorPrimary">#EF3131</color>
     <color name="colorPrimaryDark">#EF3131</color>
+    <color name="colorAccent">#FF4081</color>  -->
+
+    <color name="colorPrimary">#17BDFF</color>
+    <color name="colorPrimaryDark">#17BDFF</color>
     <color name="colorAccent">#FF4081</color>
 
     <color name="listback">#DDE1E7</color>
     <color name="listdivider">#EF3131</color>
-    <color name="listfont">#232445</color>
+    <color name="listfont">#1C2A33</color>
     <color name="mainfont">#fff</color>
 
-    <color name="darkmate">#333333</color>
+    <color name="darkmate">#1C2A33</color>
+    <color name="blue">#17BDFF</color>
+    <color name="gray">#7E8692</color>
 </resources>

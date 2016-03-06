@@ -9,6 +9,7 @@ import android.os.AsyncTask;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -35,10 +36,15 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONStringer;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import io.realm.internal.android.JsonUtils;
 
 public class CrimeMapActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
@@ -46,11 +52,11 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
     Location mLastLocation;
     LocationRequest mLocationRequest;
     RequestQueue queue;
-    Integer caseid=0;
+    Integer caseid = 0;
     static Crime crime;
-
-    static float c=21,x=57;
-
+    private static final double DEFAULT_PRECISION = 1E5;
+    static float c = 21, x = 57;
+    static List<Point> locationpoints;
     private GoogleApiClient mGoogleApiClient;
 
     @Override
@@ -59,8 +65,9 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
         setContentView(R.layout.activity_crime_map);
         setUpMapIfNeeded();
         crime = new Crime();
-        crime.setLatitude("6.9124745");
-        crime.setLongitude("79.861436");
+
+        crime.setLatitude( getIntent().getStringExtra("LATITUDE"));
+        crime.setLongitude(getIntent().getStringExtra("LONGITUDE"));
         locationManager =
                 (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         buildGoogleApiClient();
@@ -68,6 +75,8 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
        /* mLastLocation.setLatitude(Double.parseDouble(crime.getLatitude()));
         mLastLocation.setLongitude(Double.parseDouble(crime.getLongitude()));*/
         //setUpMap();
+        locationpoints = new ArrayList<>();
+       // new DirectionAsync().execute();
     }
 
     @Override
@@ -102,10 +111,10 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
                     .getMap();
             // Check if we were successful in obtaining the map.
             if (mMap != null) {
-                try{
+                try {
                     setUpMap();
-                 //   mMap.setMyLocationEnabled(true);
-                }  catch (Exception ex){
+                    //   mMap.setMyLocationEnabled(true);
+                } catch (Exception ex) {
 
 
                 }
@@ -121,21 +130,20 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
      */
     private void setUpMap() {
         //if(mLastLocation!=null) {
-            final LatLng TutorialsPoint = new LatLng(21 , 57);
-            PolylineOptions polylineOptions = new PolylineOptions()
-                .add(new LatLng(21 , 57))
-                .add(new LatLng(21,58));
-           // mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude())).title("1"));
-           // mMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(crime.getLatitude()), Double.parseDouble(crime.getLongitude()))).title("1"));
-           // mMap.addPolyline(polylineOptions);
-           // mMap.addMarker(new MarkerOptions().position(TutorialsPoint).title("1"));
-            Toast.makeText(this,"Lati"+ crime.getLatitude() + " Long" + crime.getLongitude() , Toast.LENGTH_SHORT).show();
-       new Thread(new Runnable() {
-            @Override
-            public void run() {
-                mMap.addMarker(new MarkerOptions().position(TutorialsPoint).title("6"));
-            }
-        }).start();
+        final LatLng TutorialsPoint = new LatLng(Double.parseDouble(crime.getLatitude()), Double.parseDouble(crime.getLongitude()));
+        PolylineOptions polylineOptions = new PolylineOptions()
+                .add(new LatLng(21, 57))
+                .add(new LatLng(21, 58));
+        mMap.addMarker(new MarkerOptions()
+                .position(TutorialsPoint)
+                .title("crime")
+                );
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(TutorialsPoint, 15));
+        // mMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(crime.getLatitude()), Double.parseDouble(crime.getLongitude()))).title("1"));
+        // mMap.addPolyline(polylineOptions);
+        // mMap.addMarker(new MarkerOptions().position(TutorialsPoint).title("1"));
+        Toast.makeText(this, "Lati" + crime.getLatitude() + " Long" + crime.getLongitude(), Toast.LENGTH_SHORT).show();
+
 
 
        /* }
@@ -157,13 +165,14 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
     @Override
     public void onLocationChanged(Location location) {
         mLastLocation = location;
-      //  setUpMap();
+        setUpMap();
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
 
     }
+
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -173,15 +182,18 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
         mGoogleApiClient.connect();
 
     }
+
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(10000);
         mLocationRequest.setFastestInterval(5000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
+
     protected void startLocationUpdates() {
-       LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -193,42 +205,131 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
     }
 
-    public class MapAsync extends AsyncTask<Void,Void,Void>{
+    public class MapAsync extends AsyncTask<Void, Void, Void> {
 
         @Override
         protected Void doInBackground(Void... params) {
             queue = Volley.newRequestQueue(getApplicationContext());
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, NetworkAdapter.url_getopencases ,
-                                    new Response.Listener<JSONObject>() {
-                                        @Override
-                                        public void onResponse(JSONObject response) {
-                                            try {
-                                                JSONObject crimeObject = response.getJSONObject("caselocation");
-                                                crime.setLongitude(crimeObject.getString("longitude"));
-                                                crime.setLatitude(crimeObject.getString("latitude"));
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
-                                            }
-                                        }
-                                    },
-                                    new Response.ErrorListener() {
-                                        @Override
-                                        public void onErrorResponse(VolleyError error) {
-                                            // Handle error
-                                        }
-                                    }){
-                                        @Override
-                                        protected Map<String, String> getParams() throws AuthFailureError {
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, NetworkAdapter.url_getopencases,
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            try {
+                                JSONObject crimeObject = response.getJSONObject("caselocation");
+                                crime.setLongitude(crimeObject.getString("longitude"));
+                                crime.setLatitude(crimeObject.getString("latitude"));
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            // Handle error
+                        }
+                    }) {
+                @Override
+                protected Map<String, String> getParams() throws AuthFailureError {
 
-                                            Map<String, String> parameters = new HashMap<String, String>();
-                                            parameters.put("caseid",String.valueOf( caseid));
+                    Map<String, String> parameters = new HashMap<String, String>();
+                    parameters.put("caseid", String.valueOf(caseid));
 
-                                            return parameters;
-                                        }
-                                    };
+                    return parameters;
+                }
+            };
 
-                            queue.add(jsonObjectRequest);
+            queue.add(jsonObjectRequest);
             return null;
+        }
+    }
+
+    public static List<Point> decode(String encoded) {
+        return decode(encoded, DEFAULT_PRECISION);
+    }
+
+    public static List<Point> decode(String encoded, double precision) {
+
+        int index = 0;
+        int lat = 0, lng = 0;
+
+        while (index < encoded.length()) {
+            int b, shift = 0, result = 0;
+            do {
+                b = encoded.charAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+            lat += dlat;
+
+            shift = 0;
+            result = 0;
+            do {
+                b = encoded.charAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+            lng += dlng;
+
+            Point p = new Point((double) lat / precision, (double) lng / precision);
+            Log.d("Decode", p.getLatitude() + " " + p.getLongitude());
+            locationpoints .add(p);
+        }
+        return locationpoints;
+    }
+
+    public class DirectionAsync extends AsyncTask<Void, String, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, NetworkAdapter.url_direction,
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            try {
+                                JSONObject jsonObject = new JSONObject();
+                               JSONArray routes = response.getJSONArray("routes");
+                                Log.d("direction", "1 ok");
+                               // jsonObject.put("routesdata",);
+                                JSONArray arr2 = jsonObject.getJSONArray("routesdata");
+                               // JSONObject o = routes.getJSONObject(0).toJSONArray("array");
+                                Log.d("direction", routes.get(0).toString());
+
+                                Log.d("direction", "2 ok");
+                             //   JSONArray legs =  ob.getJSONArray("legs");
+
+                                  //  Log.d("direction",routes. .get(1).toString());
+                             /*  JSONArray  stepsArray = legs.getJSONArray("steps");
+                                Log.d("direction", "3");
+                                for(int c=0;c<stepsArray.length();c++){
+                                    JSONObject step = stepsArray.getJSONObject(c);
+                                    JSONObject polyine =  step.getJSONObject("polyline");
+                                    String points =  polyine.getString("points");
+                                    publishProgress(points);
+                                }*/
+                            } catch (Exception e) {
+                                Log.d("direction", e.getMessage().toString());
+                            }
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Log.d("direction", error.getMessage().toString());
+                        }
+                    });
+
+            queue.add(jsonObjectRequest);
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(String... values) {
+            super.onProgressUpdate(values);
+            decode(values[0]);
         }
     }
 }

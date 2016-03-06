@@ -73,7 +73,8 @@ public class HomeActivity extends AppCompatActivity {
     static RealMAdapter realMAdapter;
     ArrayAdapter<Crime> adapter;
     List<Crime> crimeLocalList;
-    DepHomeAdapter depHomeAdapter;
+   // DepHomeAdapter depHomeAdapter;
+    CrimeAdapter depHomeAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,10 +98,11 @@ public class HomeActivity extends AppCompatActivity {
 
             List<Crime> list = realMAdapter.getDummy();
 
-            depHomeAdapter = new DepHomeAdapter(this, 1, list);
+           // depHomeAdapter = new DepHomeAdapter(this, 1, list);
+            depHomeAdapter = new CrimeAdapter(this, 1, list);
             crimeList = (ListView) findViewById(android.R.id.list);
             crimeList.setAdapter(depHomeAdapter);
-
+            new DepartHomeAsync().execute();
 
             crimeList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
@@ -109,6 +111,7 @@ public class HomeActivity extends AppCompatActivity {
                     Intent intent = new Intent(getApplicationContext(), DetailActivity.class);
                     intent.putExtra("caseid", String.valueOf(crime.getCaseid()));
                     startActivity(intent);
+                    overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
                 }
             });
             swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -240,26 +243,6 @@ public class HomeActivity extends AppCompatActivity {
     }
 
 
-    public void createListview(){
-        adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,new ArrayList());
-        crimeList.setAdapter(adapter);
-        new DepartHomeAsync().execute();
-        swipeContainer.setRefreshing(false);
-        /*Crime weather_data[] = new Crime[]
-                {
-                        new Crime(R.drawable.icon_e, "Cloudy"),
-                        new Crime(R.drawable.shop, "Showers"),
-                        new Crime(R.drawable.icon_k, "Snow"),
-                        new Crime(R.drawable.icon_k, "OOps"),
-                        new Crime(R.drawable.icon_k, "Hello"),
-                        new Crime(R.drawable.icon_k, "Camp"),
-                        new Crime(R.drawable.icon_k, "Game"),
-                };
-        CrimeAdapter adapter = new CrimeAdapter(this,
-                R.layout.listview_item, weather_data);
-        crimeList = (ListView)findViewById(R.id.crimelist);
-        crimeList.setAdapter(adapter);*/
-    }
 
     public class DepartHomeAsync extends AsyncTask<Void,Crime,String> {
 
@@ -267,7 +250,8 @@ public class HomeActivity extends AppCompatActivity {
 
         @Override
         protected void onPreExecute() {
-            adapter = (DepHomeAdapter) crimeList.getAdapter();
+           // adapter = (DepHomeAdapter) crimeList.getAdapter();
+            adapter = (CrimeAdapter) crimeList.getAdapter();
             adapter.clear();
         }
 
@@ -344,53 +328,4 @@ public class HomeActivity extends AppCompatActivity {
     }
 
 
-    /*
-    * Adapter to add list view
-    * */
-    class DepHomeAdapter extends ArrayAdapter<Crime> {
-        Context context;
-        List<Crime> objects;
-
-        public DepHomeAdapter(Context context, int resource, List<Crime> objects) {
-            super(context, resource, objects);
-            this.context = context;
-            this.objects = objects;
-
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            Crime crime = objects.get(position);
-            String dateTime = new String(crime.getDate());
-            String DT[] = dateTime.split("\\s+");
-            String caseName="";
-            Log.d("Dummy", crime.toString());
-            LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
-            View view = layoutInflater.inflate(R.layout.listview_item, null);
-            TextView txt = (TextView) view.findViewById(R.id.txtTitle);
-            TextView txtDate = (TextView) view.findViewById(R.id.txtDate);
-            TextView txtType  = (TextView) view.findViewById(R.id.txtType);
-            ImageView img = (ImageView) view.findViewById(R.id.imgIcon);
-            int res = 0;
-            txt.setText("Time: "+DT[1].toString());
-            txtDate.setText("Date: "+DT[0].toString());
-            switch (crime.getType()){
-                case "E":
-                    caseName="Evidence";
-                    res = context.getResources().getIdentifier("camera", "drawable", context.getPackageName());
-                    break;
-                case "R":
-                    caseName="Robbery";
-                    res = context.getResources().getIdentifier("marker", "drawable", context.getPackageName());
-                    break;
-                case "K":
-                    caseName="Kidnap";
-                    res = context.getResources().getIdentifier("run", "drawable", context.getPackageName());
-                    break;
-            }
-            txtType.setText(caseName);
-            img.setImageResource(res);
-            return view;
-        }
-    }
 }
