@@ -9,10 +9,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.location.Location;
+import android.location.LocationManager;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -44,12 +47,19 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.ishanfx.departmentapp.database.RealMAdapter;
+import com.example.ishanfx.departmentapp.network.LocationHandler;
 import com.example.ishanfx.departmentapp.network.NetworkAdapter;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -57,12 +67,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 
-public class HomeActivity extends AppCompatActivity {
+public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
     ListView crimeList;
     EditText txt;
     //public static Handler messageHandler = new MessageHandler();
@@ -75,6 +87,14 @@ public class HomeActivity extends AppCompatActivity {
     List<Crime> crimeLocalList;
    // DepHomeAdapter depHomeAdapter;
     CrimeAdapter depHomeAdapter;
+
+
+    //Location Stuff
+    private LocationManager locationManager;
+    static Location mLastLocation;
+    static LocationRequest mLocationRequest;
+    public static GoogleApiClient mGoogleApiClient;
+    public boolean isconnected = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +109,8 @@ public class HomeActivity extends AppCompatActivity {
 
             swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
             realMAdapter = new RealMAdapter(getApplicationContext());
+            buildGoogleApiClient();
+            createLocationRequest();
            /* List<Crime> li = new ArrayList<>();
             li.add(new Crime(1,"sss"));
             li.add(new Crime(2,"dddd"));*/
@@ -102,7 +124,7 @@ public class HomeActivity extends AppCompatActivity {
             depHomeAdapter = new CrimeAdapter(this, 1, list);
             crimeList = (ListView) findViewById(android.R.id.list);
             crimeList.setAdapter(depHomeAdapter);
-            new DepartHomeAsync().execute();
+          //  new DepartHomeAsync().execute();
 
             crimeList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
@@ -156,6 +178,11 @@ public class HomeActivity extends AppCompatActivity {
         if (id == R.id.action_remove) {
             RealMAdapter realMAdapter = new RealMAdapter(this);
             realMAdapter.removeData();
+        }
+        if(id == R.id.action_track){
+            if(isconnected){
+                callAsynchronousTask();
+            }
         }
 
         return super.onOptionsItemSelected(item);
@@ -219,7 +246,7 @@ public class HomeActivity extends AppCompatActivity {
         if(counter.equals("visible")) {
             NotificationCompat.Builder mBuilder =
                     new NotificationCompat.Builder(this)
-                            .setSmallIcon(R.drawable.run)
+                            .setSmallIcon(R.drawable.warning)
                             .setVibrate(new long[]{1000,1000,1000})
                             .setContentTitle("New Crime Happen")
                             .setContentText(counter);
@@ -326,6 +353,124 @@ public class HomeActivity extends AppCompatActivity {
 
 
     }
+
+    public class LastLocationInsert extends AsyncTask<Void, String, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+            StringRequest request = new StringRequest(Request.Method.POST, NetworkAdapter.url_setOwnerLocation, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
+                       /* JSONObject resposeJSON = new JSONObject(response);
+                        if (resposeJSON.names().get(0).equals("status") ) {
+
+                        }*/
+                    } catch (Exception ex) {
+
+                    }
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+
+                    Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }) {
+                @Override
+                protected Map<String, String> getParams() throws AuthFailureError {
+
+                    Map<String, String> parameters = new HashMap<String, String>();
+                    parameters.put("latitude", String.valueOf(mLastLocation.getLatitude()));
+                    parameters.put("longitude", String.valueOf(mLastLocation.getLongitude()));
+                    parameters.put("ownerid", String.valueOf(18));
+
+                    return parameters;
+                }
+            };
+            request.setRetryPolicy(new DefaultRetryPolicy(DefaultRetryPolicy.DEFAULT_TIMEOUT_MS * 2, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            queue.add(request);
+            return null;
+        }
+
+
+    }
+
+    public void callAsynchronousTask() {
+
+        final Handler handler = new Handler();
+        Timer timer = new Timer();
+        TimerTask doAsynchronousTask = new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(new Runnable() {
+                    public void run() {
+                        try {
+                            LastLocationInsert performBackgroundTask = new LastLocationInsert();
+                            // PerformBackgroundTask this class is the class that extends AsynchTask
+                            performBackgroundTask.execute();
+                        } catch (Exception e) {
+                            // TODO Auto-generated catch block
+                        }
+                    }
+                });
+            }
+        };
+        timer.schedule(doAsynchronousTask, 0, 5000); //execute in every 50000 ms
+
+    }
+
+
+//    Location Related Stuff
+
+    protected synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+        mGoogleApiClient.connect();
+        Log.d("LocCheck","API");
+    }
+    protected void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(20);
+        mLocationRequest.setFastestInterval(20);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        Log.d("LocCheck", "API2");
+
+
+    }
+    @Override
+    public void onConnected(Bundle bundle) {
+        Log.d("LocCheck", "API3");
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        Log.d("LocCheck", "API4");
+        if (mLastLocation != null) {
+
+            Log.d("LocCheck", String.valueOf(mLastLocation.getLatitude()) + " " + String.valueOf(mLastLocation.getLongitude()));
+
+        }
+        this.isconnected = true;
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+
+    }
+
 
 
 }

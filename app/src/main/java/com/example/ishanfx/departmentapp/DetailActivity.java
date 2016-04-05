@@ -56,6 +56,7 @@ public class DetailActivity extends AppCompatActivity {
 
     private void getCrimeData(Integer caseid) {
         String caseType = "";
+        String status = "";
         RealMAdapter realMAdapter = new RealMAdapter(getApplicationContext());
         Crime crime = realMAdapter.getAllData(caseid);
         String dateTime = new String(crime.getDate());
@@ -73,7 +74,16 @@ public class DetailActivity extends AppCompatActivity {
         }
         txtCaseID.setText(String.valueOf(crime.getCaseid()));
         txtType.setText(caseType);
-        txtStatus.setText(crime.getStatus());
+        switch (crime.getStatus()){
+            case "P":
+                status = "Pending";
+                break;
+            case "A":
+                status = "Assigned";
+                break;
+
+        }
+        txtStatus.setText(status.toString());
         txtDate.setText(dateTimeArray[0].toString());
         txtTime.setText(dateTimeArray[1].toString());
         txtLongitude.setText(crime.getLongitude());
@@ -91,6 +101,7 @@ public class DetailActivity extends AppCompatActivity {
 
     public void ownerAssign(View view) {
         new DetailAsync().execute();
+        txtStatus.setText("Assigned");
     }
 
     public void showNavigation(View view) {

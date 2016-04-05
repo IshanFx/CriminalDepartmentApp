@@ -1,12 +1,10 @@
 package com.example.ishanfx.departmentapp;
 
-import android.Manifest;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
-import android.support.v4.app.ActivityCompat;
+import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,6 +17,12 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+
+import com.directions.route.Route;
+import com.directions.route.Routing;
+import com.directions.route.RouteException;
+import com.directions.route.RoutingListener;
+
 import com.example.ishanfx.departmentapp.network.NetworkAdapter;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -27,26 +31,25 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONStringer;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
-import io.realm.internal.android.JsonUtils;
-
-public class CrimeMapActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class CrimeMapActivity extends FragmentActivity implements RoutingListener,GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     LocationManager locationManager;
     Location mLastLocation;
@@ -58,25 +61,26 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
     static float c = 21, x = 57;
     static List<Point> locationpoints;
     private GoogleApiClient mGoogleApiClient;
-
+    static LatLng startPoint;
+    static LatLng endPoint;
+    LatLng endlocation;
+    static boolean isRunOneTime;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_crime_map);
         setUpMapIfNeeded();
         crime = new Crime();
-
         crime.setLatitude( getIntent().getStringExtra("LATITUDE"));
         crime.setLongitude(getIntent().getStringExtra("LONGITUDE"));
+        isRunOneTime = false;
+        endlocation = new LatLng(Double.parseDouble(crime.getLatitude()), Double.parseDouble(crime.getLongitude()));
         locationManager =
                 (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         buildGoogleApiClient();
         createLocationRequest();
-       /* mLastLocation.setLatitude(Double.parseDouble(crime.getLatitude()));
-        mLastLocation.setLongitude(Double.parseDouble(crime.getLongitude()));*/
-        //setUpMap();
         locationpoints = new ArrayList<>();
-       // new DirectionAsync().execute();
+        callAsynchronousTask();
     }
 
     @Override
@@ -120,6 +124,10 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
                 }
             }
         }
+        if (!isRunOneTime){
+            setUpMap();
+        }
+
     }
 
     /**
@@ -129,28 +137,39 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
     private void setUpMap() {
-        //if(mLastLocation!=null) {
-        final LatLng TutorialsPoint = new LatLng(Double.parseDouble(crime.getLatitude()), Double.parseDouble(crime.getLongitude()));
-        PolylineOptions polylineOptions = new PolylineOptions()
-                .add(new LatLng(21, 57))
-                .add(new LatLng(21, 58));
-        mMap.addMarker(new MarkerOptions()
-                .position(TutorialsPoint)
-                .title("crime")
-                );
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(TutorialsPoint, 15));
-        // mMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(crime.getLatitude()), Double.parseDouble(crime.getLongitude()))).title("1"));
-        // mMap.addPolyline(polylineOptions);
-        // mMap.addMarker(new MarkerOptions().position(TutorialsPoint).title("1"));
+
+        Log.d("MapSet", "OK");
+        if(mLastLocation!=null) {
+            LatLng  testlocation = new LatLng(Double.parseDouble("6.9443083"), Double.parseDouble("79.8766223"));
+        isRunOneTime = true;
+        Log.d("MapSet", crime.getLatitude() + " " + crime.getLongitude());
+
+        /*mMap.addMarker(new MarkerOptions()
+                        .position(endlocation)
+                        .title("crime")
+        );*/
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(endlocation, 15));
         Toast.makeText(this, "Lati" + crime.getLatitude() + " Long" + crime.getLongitude(), Toast.LENGTH_SHORT).show();
 
+        startPoint = new LatLng(mLastLocation.getLatitude(),mLastLocation.getLongitude());
 
 
-       /* }
+        Routing routing = new Routing.Builder()
+                .travelMode(Routing.TravelMode.DRIVING)
+                .key("AIzaSyD5S1_sclTRhSA2crRAdGLmJ-2Vp7dBajE")
+                .waypoints(testlocation, endlocation)
+                .withListener(this)
+                .build();
+        routing.execute();
+
+
+        }
         else{
             Toast.makeText(this,"Cannot get details",Toast.LENGTH_SHORT).show();
-        }*/
+        }
+
     }
+
 
     @Override
     public void onConnected(Bundle bundle) {
@@ -165,7 +184,13 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
     @Override
     public void onLocationChanged(Location location) {
         mLastLocation = location;
-        setUpMap();
+        try {
+            mMap.setMyLocationEnabled(true);
+            setUpMapIfNeeded();
+        }
+        catch (Exception ex){
+            Log.d("Map",ex.getMessage().toString());
+        }
     }
 
     @Override
@@ -191,7 +216,7 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
     }
 
     protected void startLocationUpdates() {
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
 
     @Override
@@ -203,6 +228,71 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
 
     protected void stopLocationUpdates() {
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+    }
+
+    @Override
+    public void onRoutingFailure(RouteException e) {
+         Toast.makeText(getApplicationContext(),e.getMessage().toString(),Toast.LENGTH_SHORT).show();
+        Log.d("Route",e.getMessage().toString());
+    }
+
+    @Override
+    public void onRoutingStart() {
+
+    }
+    protected LatLng start;
+    protected LatLng end;
+    private ArrayList<Polyline> polylines;
+    @Override
+    public void onRoutingSuccess(ArrayList<Route> route, int i) {
+        /*CameraUpdate center = CameraUpdateFactory.newLatLng(start);
+        CameraUpdate zoom = CameraUpdateFactory.zoomTo(16);*/
+        Log.d("Route", "In sucess");
+       // mMap.moveCamera(center);
+        try {
+
+           /* if (polylines.size() > 0) {
+                for (Polyline poly : polylines) {
+                    poly.remove();
+                }
+            }*/
+            Log.d("Route","In sucess2");
+            polylines = new ArrayList<>();
+            //add route(s) to the map.
+            for (int y = 0; y < route.size(); y++) {
+                Log.d("Route","In sucess3");
+                //In case of more than 5 alternative routes
+
+
+                PolylineOptions polyOptions = new PolylineOptions();
+                polyOptions.color(getResources().getColor(R.color.colorAccent));
+                polyOptions.width(15);
+                polyOptions.addAll(route.get(y).getPoints());
+                Polyline polyline = mMap.addPolyline(polyOptions);
+                polylines.add(polyline);
+
+                Toast.makeText(getApplicationContext(), "Route " + (y + 1) + ": distance - " + route.get(y).getDistanceValue() + ": duration - " + route.get(y).getDurationValue(), Toast.LENGTH_SHORT).show();
+            }
+            Log.d("Route","In sucess4");
+            // Start marker
+        MarkerOptions options = new MarkerOptions();
+        options.position(startPoint);
+        options.icon(BitmapDescriptorFactory.fromResource(R.drawable.pointstart));
+        mMap.addMarker(options);
+            // End marker
+        options = new MarkerOptions();
+        options.position(endPoint);
+        options.icon(BitmapDescriptorFactory.fromResource(R.drawable.pointend));
+        mMap.addMarker(options);
+        }
+        catch (Exception e){
+            Log.d("Route",e.getMessage().toString().toString());
+        }
+    }
+
+    @Override
+    public void onRoutingCancelled() {
+
     }
 
     public class MapAsync extends AsyncTask<Void, Void, Void> {
@@ -280,38 +370,21 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
         return locationpoints;
     }
 
-    public class DirectionAsync extends AsyncTask<Void, String, Void> {
+    public class LastLocation extends AsyncTask<Void, String, Void> {
 
         @Override
         protected Void doInBackground(Void... params) {
-            RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, NetworkAdapter.url_direction,
+            Log.d("MapsTask","Run");
+            /*RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, NetworkAdapter.url_getMovingLocation,
                     new Response.Listener<JSONObject>() {
                         @Override
                         public void onResponse(JSONObject response) {
                             try {
-                                JSONObject jsonObject = new JSONObject();
-                               JSONArray routes = response.getJSONArray("routes");
-                                Log.d("direction", "1 ok");
-                               // jsonObject.put("routesdata",);
-                                JSONArray arr2 = jsonObject.getJSONArray("routesdata");
-                               // JSONObject o = routes.getJSONObject(0).toJSONArray("array");
-                                Log.d("direction", routes.get(0).toString());
-
-                                Log.d("direction", "2 ok");
-                             //   JSONArray legs =  ob.getJSONArray("legs");
-
-                                  //  Log.d("direction",routes. .get(1).toString());
-                             /*  JSONArray  stepsArray = legs.getJSONArray("steps");
-                                Log.d("direction", "3");
-                                for(int c=0;c<stepsArray.length();c++){
-                                    JSONObject step = stepsArray.getJSONObject(c);
-                                    JSONObject polyine =  step.getJSONObject("polyline");
-                                    String points =  polyine.getString("points");
-                                    publishProgress(points);
-                                }*/
-                            } catch (Exception e) {
-                                Log.d("direction", e.getMessage().toString());
+                                JSONObject crimeObject = response.getJSONObject("movinglocation");
+                                Log.d("Maps", crimeObject.getString("latitude"));
+                            } catch (JSONException e) {
+                                e.printStackTrace();
                             }
                         }
                     },
@@ -322,14 +395,38 @@ public class CrimeMapActivity extends FragmentActivity implements GoogleApiClien
                         }
                     });
 
-            queue.add(jsonObjectRequest);
+            queue.add(jsonObjectRequest);*/
             return null;
         }
 
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-            decode(values[0]);
-        }
+
     }
+
+
+
+    public void callAsynchronousTask() {
+
+        final Handler handler = new Handler();
+        Timer timer = new Timer();
+        TimerTask doAsynchronousTask = new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(new Runnable() {
+                    public void run() {
+                        try {
+                            LastLocation performBackgroundTask = new LastLocation();
+                            // PerformBackgroundTask this class is the class that extends AsynchTask
+                            performBackgroundTask.execute();
+                        } catch (Exception e) {
+                            // TODO Auto-generated catch block
+                        }
+                    }
+                });
+            }
+        };
+        timer.schedule(doAsynchronousTask, 0, 1000); //execute in every 50000 ms
+
+    }
+
+
 }

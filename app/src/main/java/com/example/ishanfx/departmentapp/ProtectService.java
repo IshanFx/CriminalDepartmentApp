@@ -43,6 +43,7 @@ public class ProtectService extends Service  {
     private static final String TAG = "BroadcastService";
     public static final String BROADCAST_ACTION = "com.example.ishanfx.departmentapp";
     private final Handler handler = new Handler();
+    private final Handler handlerLocation = new Handler();
     Intent intent;
     int counter = 0;
     RequestQueue queue;
@@ -64,6 +65,8 @@ public class ProtectService extends Service  {
             handler.postDelayed(this, 5000); // 5 seconds
         }
     };
+
+
 
     private void DisplayLoggingInfo() {
         RealMAdapter realMAdapter = new RealMAdapter(getApplicationContext());
@@ -128,14 +131,7 @@ public class ProtectService extends Service  {
         handler.postDelayed(sendUpdatesToUI, 1000); // 1 second
 
         Toast.makeText(getApplicationContext(), "start Service", Toast.LENGTH_SHORT).show();
-     /*   Thread thread = new Thread(new MyThreadClass(startId));
-        thread.start();*/
-        /*int i=0;
-        synchronized (this){
-            while (i<10){
 
-            }
-        }*/
         return START_STICKY;
     }
 
