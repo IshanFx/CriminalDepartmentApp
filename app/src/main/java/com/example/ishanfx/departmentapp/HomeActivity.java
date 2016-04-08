@@ -1,18 +1,13 @@
 package com.example.ishanfx.departmentapp;
 
-import android.app.Activity;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
-import android.media.AudioManager;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,20 +16,15 @@ import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.method.KeyListener;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup;
+import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -43,11 +33,9 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.ishanfx.departmentapp.database.RealMAdapter;
-import com.example.ishanfx.departmentapp.network.LocationHandler;
 import com.example.ishanfx.departmentapp.network.NetworkAdapter;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -56,27 +44,18 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import io.realm.Realm;
-import io.realm.RealmConfiguration;
-import io.realm.RealmResults;
-
-public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class HomeActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
     ListView crimeList;
     EditText txt;
+
     //public static Handler messageHandler = new MessageHandler();
     private static final String TAG = "BroadcastTest";
     private Intent intent;
@@ -85,7 +64,7 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
     static RealMAdapter realMAdapter;
     ArrayAdapter<Crime> adapter;
     List<Crime> crimeLocalList;
-   // DepHomeAdapter depHomeAdapter;
+    // DepHomeAdapter depHomeAdapter;
     CrimeAdapter depHomeAdapter;
 
 
@@ -95,6 +74,7 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
     static LocationRequest mLocationRequest;
     public static GoogleApiClient mGoogleApiClient;
     public boolean isconnected = false;
+    boolean startRealTimeTrack;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,26 +85,28 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
         try {
             intent = new Intent(this, ProtectService.class);
             txt = (EditText) findViewById(R.id.editText);
-
+            startRealTimeTrack = false;
 
             swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
             realMAdapter = new RealMAdapter(getApplicationContext());
+            locationManager =
+                    (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
             buildGoogleApiClient();
             createLocationRequest();
            /* List<Crime> li = new ArrayList<>();
             li.add(new Crime(1,"sss"));
             li.add(new Crime(2,"dddd"));*/
-        //    crimeLocalList = realMAdapter.getAllCrimeData();
-           // adapter = new CrimeAdapter(getApplicationContext(), 0, li);
-         //   crimeList.setAdapter(adapter);
+            //    crimeLocalList = realMAdapter.getAllCrimeData();
+            // adapter = new CrimeAdapter(getApplicationContext(), 0, li);
+            //   crimeList.setAdapter(adapter);
 
             List<Crime> list = realMAdapter.getDummy();
 
-           // depHomeAdapter = new DepHomeAdapter(this, 1, list);
+            // depHomeAdapter = new DepHomeAdapter(this, 1, list);
             depHomeAdapter = new CrimeAdapter(this, 1, list);
             crimeList = (ListView) findViewById(android.R.id.list);
             crimeList.setAdapter(depHomeAdapter);
-          //  new DepartHomeAsync().execute();
+            new DepartHomeAsync().execute();
 
             crimeList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
@@ -139,7 +121,7 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
             swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
                 @Override
                 public void onRefresh() {
-                    realMAdapter.removeData();
+                    //realMAdapter.removeData();
                     new DepartHomeAsync().execute();
                 }
             });
@@ -149,13 +131,10 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
                     android.R.color.holo_green_light,
                     android.R.color.holo_orange_light,
                     android.R.color.holo_red_light);
-        }
-        catch(Exception ex){
-             Toast.makeText(getApplicationContext(),ex.getMessage(),Toast.LENGTH_SHORT).show();
+        } catch (Exception ex) {
+            Toast.makeText(getApplicationContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -179,16 +158,32 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
             RealMAdapter realMAdapter = new RealMAdapter(this);
             realMAdapter.removeData();
         }
-        if(id == R.id.action_track){
-            if(isconnected){
-                callAsynchronousTask();
+        if (id == R.id.action_track) {
+            if (isconnected) {
+                //Intent i= new Intent(this, ScheduledServices.class);
+                //  startService(i);
+                if (startRealTimeTrack) {
+                    startRealTimeTrack = false;
+                } else {
+                  /*  LastLocationInsert loc = new LastLocationInsert();
+                    loc.execute();*/
+                    startRealTimeTrack = true;
+                }
+                // callAsynchronousTask();
             }
+        }
+        if (id == R.id.action_assign) {
+            Intent intent = new Intent(this,AssignActivity.class);
+            startActivity(intent);
+        }
+        if(id==R.id.action_logout){
+            realMAdapter.removeUser();
+            Intent intent = new Intent(this,LoginActivity.class);
+            startActivity(intent);
         }
 
         return super.onOptionsItemSelected(item);
     }
-
-
 
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -199,11 +194,11 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if(keyCode==KeyEvent.KEYCODE_VOLUME_DOWN){
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
             NotificationCompat.Builder mBuilder =
                     new NotificationCompat.Builder(this)
                             .setSmallIcon(R.drawable.run)
-                            .setVibrate(new long[]{1000,1000,1000})
+                            .setVibrate(new long[]{1000, 1000, 1000})
                             .setContentTitle("Volume Press")
                             .setContentText("OOPS");
             Intent resultIntent = new Intent();
@@ -229,6 +224,11 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
         super.onResume();
         startService(intent);
         registerReceiver(broadcastReceiver, new IntentFilter(ProtectService.BROADCAST_ACTION));
+
+        if (mGoogleApiClient.isConnected()) {
+            startLocationUpdates();
+        }
+
     }
 
 
@@ -243,11 +243,11 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
     * */
     private void showNotification(String counter) {
 
-        if(counter.equals("visible")) {
+        if (counter.equals("visible")) {
             NotificationCompat.Builder mBuilder =
                     new NotificationCompat.Builder(this)
                             .setSmallIcon(R.drawable.warning)
-                            .setVibrate(new long[]{1000,1000,1000})
+                            .setVibrate(new long[]{1000, 1000, 1000})
                             .setContentTitle("New Crime Happen")
                             .setContentText(counter);
             Intent resultIntent = new Intent();
@@ -270,14 +270,13 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
     }
 
 
-
-    public class DepartHomeAsync extends AsyncTask<Void,Crime,String> {
+    public class DepartHomeAsync extends AsyncTask<Void, Crime, String> {
 
         ArrayAdapter<Crime> adapter;
 
         @Override
         protected void onPreExecute() {
-           // adapter = (DepHomeAdapter) crimeList.getAdapter();
+            // adapter = (DepHomeAdapter) crimeList.getAdapter();
             adapter = (CrimeAdapter) crimeList.getAdapter();
             adapter.clear();
         }
@@ -292,9 +291,9 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
                             public void onResponse(String response) {
                                 try {
                                     Log.d("Dip", response.toString());
-                                    JSONObject crimejsonObject =  new JSONObject(response);
+                                    JSONObject crimejsonObject = new JSONObject(response);
                                     JSONArray array = crimejsonObject.getJSONArray("opencase");
-                                    Log.d("Dip",String.valueOf( array.length()));
+                                    Log.d("Dip", String.valueOf(array.length()));
                                     for (int i = 0; i < array.length(); i++) {
                                         JSONObject jsonObject = array.getJSONObject(i);
 
@@ -316,14 +315,14 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
                         new Response.ErrorListener() {
                             @Override
                             public void onErrorResponse(VolleyError error) {
-                                Log.d("history1",error.toString());
+                                Log.d("history1", error.toString());
                             }
                         }) {
                     @Override
                     protected Map<String, String> getParams() throws AuthFailureError {
-                        Log.d("Dip","Dip start");
+                        Log.d("Dip", "Dip start");
                         Map<String, String> parameters = new HashMap<String, String>();
-                        parameters.put("ownerid","1");
+                        parameters.put("ownerid", "1");
                         return parameters;
                     }
                 };
@@ -341,13 +340,13 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
 
         @Override
         protected void onPostExecute(String txt) {
-          swipeContainer.setRefreshing(false);
+            swipeContainer.setRefreshing(false);
         }
 
         @Override
         protected void onProgressUpdate(Crime... values) {
             adapter.add(values[0]);
-            realMAdapter.insertData(values[0]);
+           // realMAdapter.insertData(values[0]);
             //super.onProgressUpdate(values);
         }
 
@@ -358,11 +357,14 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
 
         @Override
         protected Void doInBackground(Void... params) {
+            Log.d("OwnerInsert", "work1");
             RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+
             StringRequest request = new StringRequest(Request.Method.POST, NetworkAdapter.url_setOwnerLocation, new Response.Listener<String>() {
                 @Override
                 public void onResponse(String response) {
                     try {
+                        Log.d("OwnerInsert", "work2");
                        /* JSONObject resposeJSON = new JSONObject(response);
                         if (resposeJSON.names().get(0).equals("status") ) {
 
@@ -384,7 +386,7 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
                     Map<String, String> parameters = new HashMap<String, String>();
                     parameters.put("latitude", String.valueOf(mLastLocation.getLatitude()));
                     parameters.put("longitude", String.valueOf(mLastLocation.getLongitude()));
-                    parameters.put("ownerid", String.valueOf(18));
+                    parameters.put("ownerid", String.valueOf(1));
 
                     return parameters;
                 }
@@ -410,6 +412,7 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
                             LastLocationInsert performBackgroundTask = new LastLocationInsert();
                             // PerformBackgroundTask this class is the class that extends AsynchTask
                             performBackgroundTask.execute();
+                            Log.d("Long", String.valueOf(mLastLocation.getLongitude()));
                         } catch (Exception e) {
                             // TODO Auto-generated catch block
                         }
@@ -417,8 +420,18 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
                 });
             }
         };
-        timer.schedule(doAsynchronousTask, 0, 5000); //execute in every 50000 ms
+        timer.schedule(doAsynchronousTask, 0, 50000); //execute in every 50000 ms*/
 
+       /* handler.postDelayed(new Runnable() {
+            public void run() {
+                LastLocationInsert performBackgroundTask = new LastLocationInsert();
+                // PerformBackgroundTask this class is the class that extends AsynchTask
+                performBackgroundTask.execute();
+
+                Log.d("Long",String.valueOf(mLastLocation.getLongitude()));
+                handler.postDelayed(this, 80000); //now is every 2 minutes
+            }
+        }, 10000); //Every 120000 ms (2 minutes)*/
     }
 
 
@@ -431,28 +444,23 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
                 .addApi(LocationServices.API)
                 .build();
         mGoogleApiClient.connect();
-        Log.d("LocCheck","API");
+        Log.d("LocCheck", "API");
     }
+
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(20);
-        mLocationRequest.setFastestInterval(20);
+        mLocationRequest.setInterval(1000);
+        mLocationRequest.setFastestInterval(1000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         Log.d("LocCheck", "API2");
 
 
     }
+
     @Override
     public void onConnected(Bundle bundle) {
         Log.d("LocCheck", "API3");
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
-                mGoogleApiClient);
-        Log.d("LocCheck", "API4");
-        if (mLastLocation != null) {
-
-            Log.d("LocCheck", String.valueOf(mLastLocation.getLatitude()) + " " + String.valueOf(mLastLocation.getLongitude()));
-
-        }
+        startLocationUpdates();
         this.isconnected = true;
     }
 
@@ -463,7 +471,34 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
 
     @Override
     public void onLocationChanged(Location location) {
+        mLastLocation = location;
+        updateLocation();
+    }
 
+    private void updateLocation() {
+        Log.d("OwnerInsert", "Start Track 0");
+        if (startRealTimeTrack) {
+            callAsynchronousTask();
+
+            Log.d("OwnerInsert", "Start Track");
+            LastLocationInsert loc = new LastLocationInsert();
+            loc.execute();
+           /* if (startCycle == 1) {
+                smsManage.sendSMS("Latitude:" + String.valueOf(mLastLocation.getLatitude()) + "Longitude:" + String.valueOf(mLastLocation.getLongitude()));
+                startCycle += 2;
+               Log.d("SMSLogin", String.valueOf(startCycle));
+            }*/
+        }
+    }
+
+    protected void startLocationUpdates() {
+        LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, mLocationRequest, this);
+    }
+
+    protected void stopLocationUpdates() {
+        LocationServices.FusedLocationApi.removeLocationUpdates(
+                mGoogleApiClient, this);
     }
 
     @Override
@@ -472,5 +507,9 @@ public class HomeActivity extends AppCompatActivity  implements GoogleApiClient.
     }
 
 
-
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopLocationUpdates();
+    }
 }

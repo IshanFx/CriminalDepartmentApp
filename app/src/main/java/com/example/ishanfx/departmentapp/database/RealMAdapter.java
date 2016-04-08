@@ -14,6 +14,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.ishanfx.departmentapp.Crime;
+import com.example.ishanfx.departmentapp.DAO.User;
 import com.example.ishanfx.departmentapp.network.NetworkAdapter;
 
 import org.json.JSONArray;
@@ -160,6 +161,35 @@ public class RealMAdapter  {
         caseAsync.execute();*/
     }
 
+    public boolean checkSecondLogin() {
+        User results = protectRMDB.where(User.class).findFirst();
+        if (results == null) {
+            Log.d("Realm", "local user Not found");
+            return false;
+
+        } else {
+            Log.d("Realm", "local user found");
+            return true;
+        }
+    }
+
+    public void removeUser() {
+        RealmResults<User> results = protectRMDB.where(User.class).findAll();
+        protectRMDB.beginTransaction();
+        results.clear();
+        Log.d("Realm", "Remove Sucess "+results.size() );
+        protectRMDB.commitTransaction();
+    }
+
+    public void insertUser(User user) {
+        protectRMDB.beginTransaction();
+        User userObject = protectRMDB.createObject(User.class);
+        userObject.setId(user.getId());
+        //userObject.setEmail(user.getEmail());
+        //userObject.setPassword(user.getPassword());
+        protectRMDB.commitTransaction();
+        Log.d("Realm", "Insert Success " + user.getId());
+    }
     public class CaseAsync extends AsyncTask<Void,Crime,Void>{
         @Override
         protected Void doInBackground(Void... params) {

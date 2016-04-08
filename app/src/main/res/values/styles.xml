@@ -23,10 +23,12 @@
         <item name="android:padding">10dp</item>
         <item name="android:layout_height">match_parent</item>
     </style>
+
     <style name="listtext">
         <item name="android:textSize">20dp</item>
         <item name="android:textStyle">bold</item>
     </style>
+
     <style name="listStyle">
         <item name="android:layout_marginLeft">120dp</item>
         <item name="android:textSize">20dp</item>
@@ -40,5 +42,28 @@
         <item name="android:textColor">@color/mainfont</item>
         <item name="android:padding">15px</item>
         <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="LogInTheme">
+        <item name="android:textColor">#FF7F66</item>
+        <item name="android:textSize">22dp</item>
+        <item name="android:textColorHint">#fff</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:paddingLeft">15dp</item>
+        <item name="android:background">@color/cardview_light_background</item>
+        <item name="colorControlActivated">#E9F1DF</item>
+        <!-- EditText line color when EditText on-focus-->
+        <item name="colorControlHighlight">#E9F1DF</item>
+        <!-- EditText line color when EditText  in un-focus-->
+
+        <item name="colorControlNormal">#fff</item>
+        <item name="android:layout_height">50dp</item>
+    </style>
+
+    <style name="LogInButton">
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="android:textColor">#fff</item>
+        <item name="android:textSize">20dp</item>
+        <item name="android:layout_marginTop">20dp</item>
     </style>
 </resources>
