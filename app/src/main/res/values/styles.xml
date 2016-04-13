@@ -48,9 +48,9 @@
         <item name="android:textColor">#FF7F66</item>
         <item name="android:textSize">22dp</item>
         <item name="android:textColorHint">#fff</item>
-        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:layout_marginBottom">5dp</item>
         <item name="android:paddingLeft">15dp</item>
-        <item name="android:background">@color/cardview_light_background</item>
+        <item name="android:background">@drawable/custome_edittext</item>
         <item name="colorControlActivated">#E9F1DF</item>
         <!-- EditText line color when EditText on-focus-->
         <item name="colorControlHighlight">#E9F1DF</item>
@@ -64,6 +64,6 @@
         <item name="android:background">@color/colorPrimary</item>
         <item name="android:textColor">#fff</item>
         <item name="android:textSize">20dp</item>
-        <item name="android:layout_marginTop">20dp</item>
+        <item name="android:layout_marginTop">10dp</item>
     </style>
 </resources>

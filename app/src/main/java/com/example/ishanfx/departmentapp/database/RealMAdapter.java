@@ -266,4 +266,9 @@ public class RealMAdapter  {
 
         }
     }
+
+    public Integer getUserId(){
+        User results = protectRMDB.where(User.class).findFirst();
+        return  results.getId();
+    }
 }

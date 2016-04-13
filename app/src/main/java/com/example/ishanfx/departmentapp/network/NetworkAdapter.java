@@ -17,6 +17,7 @@ public class NetworkAdapter {
     public static final String url_setOwnerLocation = "http://"+host+"/policemovinglocationadd";
     public static String url_getMovingLocation      = "http://"+host+"/policemovinglocation/467";
     public static String url_getLoginVerify         = "http://"+host+"/policelogin";
+    public static String url_setFinished         = "http://"+host+"/policecasefinish";
     public static final String url_direction = "https://maps.googleapis.com/maps/api/directions/json?origin=Toronto&destination=Montreal&key=AIzaSyD3x7xCyqfVRojZ5YATBP0sMsvcmU0QHl4";
 
     public static boolean isOnline(Context context) {

@@ -9,7 +9,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.protectme.LoginActivity"
-    android:background="@color/darkmate">
+    >
 
     <!-- Login progress -->
    <!-- <ImageView
@@ -26,12 +26,12 @@
         android:layout_marginBottom="8dp"
         android:visibility="gone" />
 
-<!--    <ImageView
-        android:layout_width="170dp"
-        android:layout_marginTop="30dp"
-        android:layout_height="150dp"
+    <ImageView
+        android:layout_width="160dp"
+        android:layout_marginTop="10dp"
+        android:layout_height="140dp"
         android:id="@+id/imageView"
-        android:background="@drawable/logo" />-->
+        android:background="@drawable/logo" />
 
     <ScrollView
         android:id="@+id/login_form"
@@ -44,7 +44,7 @@
             android:id="@+id/email_login_form"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="20dp"
             android:orientation="vertical">
 
             <android.support.design.widget.TextInputLayout

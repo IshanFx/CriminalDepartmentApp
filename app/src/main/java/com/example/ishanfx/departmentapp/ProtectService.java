@@ -62,7 +62,7 @@ public class ProtectService extends Service  {
     private Runnable sendUpdatesToUI = new Runnable() {
         public void run() {
             DisplayLoggingInfo();
-            handler.postDelayed(this, 5000); // 5 seconds
+            handler.postDelayed(this, 1000); // 5 seconds
         }
     };
 

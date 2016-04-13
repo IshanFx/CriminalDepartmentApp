@@ -52,7 +52,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class HomeActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class HomeActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,LocationListener {// , LocationListener need realtime track
     ListView crimeList;
     EditText txt;
 
@@ -75,7 +75,7 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.C
     public static GoogleApiClient mGoogleApiClient;
     public boolean isconnected = false;
     boolean startRealTimeTrack;
-
+    static int userId;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,6 +89,7 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.C
 
             swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
             realMAdapter = new RealMAdapter(getApplicationContext());
+            userId = realMAdapter.getUserId();
             locationManager =
                     (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
             buildGoogleApiClient();
@@ -159,18 +160,18 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.C
             realMAdapter.removeData();
         }
         if (id == R.id.action_track) {
-            if (isconnected) {
-                //Intent i= new Intent(this, ScheduledServices.class);
-                //  startService(i);
+          /* Track user in timely manner
+          if (isconnected) {
                 if (startRealTimeTrack) {
                     startRealTimeTrack = false;
                 } else {
-                  /*  LastLocationInsert loc = new LastLocationInsert();
-                    loc.execute();*/
+
                     startRealTimeTrack = true;
                 }
-                // callAsynchronousTask();
-            }
+
+            }*/
+
+            new  LastLocationInsertOnce().execute();
         }
         if (id == R.id.action_assign) {
             Intent intent = new Intent(this,AssignActivity.class);
@@ -225,9 +226,12 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.C
         startService(intent);
         registerReceiver(broadcastReceiver, new IntentFilter(ProtectService.BROADCAST_ACTION));
 
-        if (mGoogleApiClient.isConnected()) {
+        /*
+        * Need realtime track
+        * */
+       /* if (mGoogleApiClient.isConnected()) {
             startLocationUpdates();
-        }
+        }*/
 
     }
 
@@ -269,6 +273,261 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.C
         txt.setText(counter);
     }
 
+
+//    Location Related Stuff
+
+    protected synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+        mGoogleApiClient.connect();
+        Log.d("LocCheck", "API");
+    }
+
+    protected void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(1000);
+        mLocationRequest.setFastestInterval(1000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        Log.d("LocCheck", "API2");
+
+
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        Log.d("LocCheck", "API3");
+      /*  mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);*/
+
+        /*
+        * For reltime track
+        * */
+        startLocationUpdates();
+        this.isconnected = true;
+    }
+
+    /*
+    * Only for update when click
+    * */
+
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+
+    }
+    @Override
+    public void onLocationChanged(Location location) {
+
+        mLastLocation = location;
+        //updateLocation();
+    }
+    protected void startLocationUpdates() {
+
+      LocationServices.FusedLocationApi.requestLocationUpdates(
+        mGoogleApiClient, mLocationRequest, this);
+    }
+
+    protected void stopLocationUpdates() {
+        LocationServices.FusedLocationApi.removeLocationUpdates(
+                mGoogleApiClient, this);
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopLocationUpdates();
+    }
+ /*
+
+    private void updateLocation() {
+        Log.d("OwnerInsert", "Start Track 0");
+        if (startRealTimeTrack) {
+            callAsynchronousTask();
+
+            Log.d("OwnerInsert", "Start Track");
+            LastLocationInsert loc = new LastLocationInsert();
+            loc.execute();
+           *//* if (startCycle == 1) {
+                smsManage.sendSMS("Latitude:" + String.valueOf(mLastLocation.getLatitude()) + "Longitude:" + String.valueOf(mLastLocation.getLongitude()));
+                startCycle += 2;
+               Log.d("SMSLogin", String.valueOf(startCycle));
+            }*//*
+        }
+    }
+
+    protected void startLocationUpdates() {
+        mLastLocation = LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, mLocationRequest, this);
+       *//* mLastLocation = LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, mLocationRequest, this);*//*
+    }
+
+    protected void stopLocationUpdates() {
+        LocationServices.FusedLocationApi.removeLocationUpdates(
+                mGoogleApiClient, this);
+    }
+
+
+
+
+
+
+    *//*
+    * Update user location in timely manner
+    * *//*
+    public void callAsynchronousTask() {
+
+        final Handler handler = new Handler();
+        Timer timer = new Timer();
+        TimerTask doAsynchronousTask = new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(new Runnable() {
+                    public void run() {
+                        try {
+                            LastLocationInsert performBackgroundTask = new LastLocationInsert();
+                            // PerformBackgroundTask this class is the class that extends AsynchTask
+                            performBackgroundTask.execute();
+                            Log.d("Long", String.valueOf(mLastLocation.getLongitude()));
+                        } catch (Exception e) {
+                            // TODO Auto-generated catch block
+                        }
+                    }
+                });
+            }
+        };
+        timer.schedule(doAsynchronousTask, 0, 50000); //execute in every 50000 ms*//*
+
+       *//* handler.postDelayed(new Runnable() {
+            public void run() {
+                LastLocationInsert performBackgroundTask = new LastLocationInsert();
+                // PerformBackgroundTask this class is the class that extends AsynchTask
+                performBackgroundTask.execute();
+
+                Log.d("Long",String.valueOf(mLastLocation.getLongitude()));
+                handler.postDelayed(this, 80000); //now is every 2 minutes
+            }
+        }, 10000); //Every 120000 ms (2 minutes)*//*
+    }
+
+
+
+        @Override
+        protected void onPostExecute(String txt) {
+            swipeContainer.setRefreshing(false);
+        }
+
+        @Override
+        protected void onProgressUpdate(Crime... values) {
+            adapter.add(values[0]);
+            // realMAdapter.insertData(values[0]);
+            //super.onProgressUpdate(values);
+        }
+
+
+    }
+
+
+    public class LastLocationInsert extends AsyncTask<Void, String, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            Log.d("OwnerInsert", "work1");
+            RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+
+            StringRequest request = new StringRequest(Request.Method.POST, NetworkAdapter.url_setOwnerLocation, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
+                        Log.d("OwnerInsert", "work2");
+                       *//* JSONObject resposeJSON = new JSONObject(response);
+                        if (resposeJSON.names().get(0).equals("status") ) {
+
+                        }*//*
+                    } catch (Exception ex) {
+
+                    }
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+
+                    Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }) {
+                @Override
+                protected Map<String, String> getParams() throws AuthFailureError {
+
+                    Map<String, String> parameters = new HashMap<String, String>();
+                    parameters.put("latitude", String.valueOf(mLastLocation.getLatitude()));
+                    parameters.put("longitude", String.valueOf(mLastLocation.getLongitude()));
+                    parameters.put("ownerid", String.valueOf(1));
+
+                    return parameters;
+                }
+            };
+            request.setRetryPolicy(new DefaultRetryPolicy(DefaultRetryPolicy.DEFAULT_TIMEOUT_MS * 2, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            queue.add(request);
+            return null;
+        }
+
+
+    }*/
+
+    /*
+    * insert Last location when click
+    * */
+    public class LastLocationInsertOnce extends AsyncTask<Void, String, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            Log.d("OwnerInsert", "work1");
+            RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+
+            StringRequest request = new StringRequest(Request.Method.POST, NetworkAdapter.url_setOwnerLocation, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
+                        Log.d("OwnerInsert", "work2");
+                       /* JSONObject resposeJSON = new JSONObject(response);
+                        if (resposeJSON.names().get(0).equals("status") ) {
+
+                        }*/
+                    } catch (Exception ex) {
+
+                    }
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+
+                    Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }) {
+                @Override
+                protected Map<String, String> getParams() throws AuthFailureError {
+
+                    Map<String, String> parameters = new HashMap<String, String>();
+                    parameters.put("latitude", String.valueOf(mLastLocation.getLatitude()));
+                    parameters.put("longitude", String.valueOf(mLastLocation.getLongitude()));
+                    parameters.put("ownerid", String.valueOf(userId));
+
+                    return parameters;
+                }
+            };
+            request.setRetryPolicy(new DefaultRetryPolicy(DefaultRetryPolicy.DEFAULT_TIMEOUT_MS * 2, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            queue.add(request);
+            return null;
+        }
+
+
+    }
 
     public class DepartHomeAsync extends AsyncTask<Void, Crime, String> {
 
@@ -332,184 +591,18 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.C
             } catch (Exception ex) {
                 return ex.getMessage();
             }
-            /*for (int i=0;i<10;i++){
-                publishProgress(i);
-            }*/
 
-        }
-
-        @Override
-        protected void onPostExecute(String txt) {
-            swipeContainer.setRefreshing(false);
         }
 
         @Override
         protected void onProgressUpdate(Crime... values) {
             adapter.add(values[0]);
-           // realMAdapter.insertData(values[0]);
-            //super.onProgressUpdate(values);
         }
-
-
-    }
-
-    public class LastLocationInsert extends AsyncTask<Void, String, Void> {
 
         @Override
-        protected Void doInBackground(Void... params) {
-            Log.d("OwnerInsert", "work1");
-            RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-
-            StringRequest request = new StringRequest(Request.Method.POST, NetworkAdapter.url_setOwnerLocation, new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    try {
-                        Log.d("OwnerInsert", "work2");
-                       /* JSONObject resposeJSON = new JSONObject(response);
-                        if (resposeJSON.names().get(0).equals("status") ) {
-
-                        }*/
-                    } catch (Exception ex) {
-
-                    }
-                }
-            }, new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-
-                    Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            }) {
-                @Override
-                protected Map<String, String> getParams() throws AuthFailureError {
-
-                    Map<String, String> parameters = new HashMap<String, String>();
-                    parameters.put("latitude", String.valueOf(mLastLocation.getLatitude()));
-                    parameters.put("longitude", String.valueOf(mLastLocation.getLongitude()));
-                    parameters.put("ownerid", String.valueOf(1));
-
-                    return parameters;
-                }
-            };
-            request.setRetryPolicy(new DefaultRetryPolicy(DefaultRetryPolicy.DEFAULT_TIMEOUT_MS * 2, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-            queue.add(request);
-            return null;
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            swipeContainer.setRefreshing(false);
         }
-
-
-    }
-
-    public void callAsynchronousTask() {
-
-        final Handler handler = new Handler();
-        Timer timer = new Timer();
-        TimerTask doAsynchronousTask = new TimerTask() {
-            @Override
-            public void run() {
-                handler.post(new Runnable() {
-                    public void run() {
-                        try {
-                            LastLocationInsert performBackgroundTask = new LastLocationInsert();
-                            // PerformBackgroundTask this class is the class that extends AsynchTask
-                            performBackgroundTask.execute();
-                            Log.d("Long", String.valueOf(mLastLocation.getLongitude()));
-                        } catch (Exception e) {
-                            // TODO Auto-generated catch block
-                        }
-                    }
-                });
-            }
-        };
-        timer.schedule(doAsynchronousTask, 0, 50000); //execute in every 50000 ms*/
-
-       /* handler.postDelayed(new Runnable() {
-            public void run() {
-                LastLocationInsert performBackgroundTask = new LastLocationInsert();
-                // PerformBackgroundTask this class is the class that extends AsynchTask
-                performBackgroundTask.execute();
-
-                Log.d("Long",String.valueOf(mLastLocation.getLongitude()));
-                handler.postDelayed(this, 80000); //now is every 2 minutes
-            }
-        }, 10000); //Every 120000 ms (2 minutes)*/
-    }
-
-
-//    Location Related Stuff
-
-    protected synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-        mGoogleApiClient.connect();
-        Log.d("LocCheck", "API");
-    }
-
-    protected void createLocationRequest() {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(1000);
-        mLocationRequest.setFastestInterval(1000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        Log.d("LocCheck", "API2");
-
-
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
-        Log.d("LocCheck", "API3");
-        startLocationUpdates();
-        this.isconnected = true;
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        mLastLocation = location;
-        updateLocation();
-    }
-
-    private void updateLocation() {
-        Log.d("OwnerInsert", "Start Track 0");
-        if (startRealTimeTrack) {
-            callAsynchronousTask();
-
-            Log.d("OwnerInsert", "Start Track");
-            LastLocationInsert loc = new LastLocationInsert();
-            loc.execute();
-           /* if (startCycle == 1) {
-                smsManage.sendSMS("Latitude:" + String.valueOf(mLastLocation.getLatitude()) + "Longitude:" + String.valueOf(mLastLocation.getLongitude()));
-                startCycle += 2;
-               Log.d("SMSLogin", String.valueOf(startCycle));
-            }*/
-        }
-    }
-
-    protected void startLocationUpdates() {
-        LocationServices.FusedLocationApi.requestLocationUpdates(
-                mGoogleApiClient, mLocationRequest, this);
-    }
-
-    protected void stopLocationUpdates() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(
-                mGoogleApiClient, this);
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-
-    }
-
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        stopLocationUpdates();
     }
 }
