@@ -11,11 +11,13 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import com.directions.route.Route;
@@ -34,6 +36,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -55,24 +58,29 @@ public class CrimeMapActivity extends FragmentActivity implements RoutingListene
     Location mLastLocation;
     LocationRequest mLocationRequest;
     RequestQueue queue;
-    Integer caseid = 0;
+    static String CASEID = "";
     static Crime crime;
     private static final double DEFAULT_PRECISION = 1E5;
-    static float c = 21, x = 57;
     static List<Point> locationpoints;
     private GoogleApiClient mGoogleApiClient;
     static LatLng startPoint;
     static LatLng endPoint;
-    LatLng endlocation;
+    static LatLng endlocation;
     static boolean isRunOneTime;
+    static String CRIME_TYPE ="";
+    Marker mapLastMarker;
+    Timer timer;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_crime_map);
         setUpMapIfNeeded();
         crime = new Crime();
-        crime.setLatitude( getIntent().getStringExtra("LATITUDE"));
+        crime.setLatitude(getIntent().getStringExtra("LATITUDE"));
         crime.setLongitude(getIntent().getStringExtra("LONGITUDE"));
+        CRIME_TYPE = getIntent().getStringExtra("TYPE");
+        CASEID = getIntent().getStringExtra("CASEID");
+
         isRunOneTime = false;
         endlocation = new LatLng(Double.parseDouble(crime.getLatitude()), Double.parseDouble(crime.getLongitude()));
         locationManager =
@@ -80,7 +88,7 @@ public class CrimeMapActivity extends FragmentActivity implements RoutingListene
         buildGoogleApiClient();
         createLocationRequest();
         locationpoints = new ArrayList<>();
-        callAsynchronousTask();
+
     }
 
     @Override
@@ -137,31 +145,39 @@ public class CrimeMapActivity extends FragmentActivity implements RoutingListene
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
     private void setUpMap() {
+        if(CRIME_TYPE.equals("K")){
+              callAsynchronousTask();
+        }
 
         Log.d("MapSet", "OK");
         if(mLastLocation!=null) {
             LatLng  testlocation = new LatLng(Double.parseDouble("6.9443083"), Double.parseDouble("79.8766223"));
         isRunOneTime = true;
-        Log.d("MapSet", crime.getLatitude() + " " + crime.getLongitude());
+            Log.d("MapSet", crime.getLatitude() + " " + crime.getLongitude());
 
         /*mMap.addMarker(new MarkerOptions()
                         .position(endlocation)
                         .title("crime")
         );*/
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(endlocation, 15));
-        Toast.makeText(this, "Lati" + crime.getLatitude() + " Long" + crime.getLongitude(), Toast.LENGTH_SHORT).show();
 
+            Log.d("MapSet",String.valueOf(endlocation.latitude));
+        mMap.addMarker(new MarkerOptions()
+        .position(endlocation)
+        .icon(BitmapDescriptorFactory.fromResource(R.drawable.pointend))
+        );
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(endlocation, 15));
         startPoint = new LatLng(mLastLocation.getLatitude(),mLastLocation.getLongitude());
 
-
-        Routing routing = new Routing.Builder()
-                .travelMode(Routing.TravelMode.DRIVING)
-                .key("AIzaSyD5S1_sclTRhSA2crRAdGLmJ-2Vp7dBajE")
-                .waypoints(testlocation, endlocation)
-                .withListener(this)
-                .build();
-        routing.execute();
-
+            if(!CRIME_TYPE.equals("K")) {
+                Routing routing = new Routing.Builder()
+                        .travelMode(Routing.TravelMode.DRIVING)
+                        .key("AIzaSyD5S1_sclTRhSA2crRAdGLmJ-2Vp7dBajE")
+                        .waypoints(startPoint, endlocation)
+                        .withListener(this)
+                        .build();
+                routing.execute();
+            }
 
         }
         else{
@@ -280,10 +296,7 @@ public class CrimeMapActivity extends FragmentActivity implements RoutingListene
         options.icon(BitmapDescriptorFactory.fromResource(R.drawable.pointstart));
         mMap.addMarker(options);
             // End marker
-        options = new MarkerOptions();
-        options.position(endPoint);
-        options.icon(BitmapDescriptorFactory.fromResource(R.drawable.pointend));
-        mMap.addMarker(options);
+
         }
         catch (Exception e){
             Log.d("Route",e.getMessage().toString().toString());
@@ -323,7 +336,7 @@ public class CrimeMapActivity extends FragmentActivity implements RoutingListene
                 protected Map<String, String> getParams() throws AuthFailureError {
 
                     Map<String, String> parameters = new HashMap<String, String>();
-                    parameters.put("caseid", String.valueOf(caseid));
+                    parameters.put("caseid", CASEID);
 
                     return parameters;
                 }
@@ -375,39 +388,54 @@ public class CrimeMapActivity extends FragmentActivity implements RoutingListene
         @Override
         protected Void doInBackground(Void... params) {
             Log.d("MapsTask","Run");
-            /*RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, NetworkAdapter.url_getMovingLocation,
-                    new Response.Listener<JSONObject>() {
-                        @Override
-                        public void onResponse(JSONObject response) {
-                            try {
-                                JSONObject crimeObject = response.getJSONObject("movinglocation");
-                                Log.d("Maps", crimeObject.getString("latitude"));
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    },
-                    new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            Log.d("direction", error.getMessage().toString());
-                        }
-                    });
+            queue = Volley.newRequestQueue(getApplicationContext());
+            StringRequest request = new StringRequest(Request.Method.POST, NetworkAdapter.url_getonetask, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
 
-            queue.add(jsonObjectRequest);*/
+                        JSONObject crimejsonObject = new JSONObject(response);
+                        JSONArray array = crimejsonObject.getJSONArray("case");
+                        crimejsonObject = array.getJSONObject(0);
+                        Log.d("crime", crimejsonObject.toString());
+                        //mapLastMarker.remove();
+                        //crime.setLatitude(crimejsonObject.getString("latitude"));
+                        //crime.setLongitude(crimejsonObject.getString("longitude"));
+                        LatLng  newlocation = new LatLng(Double.parseDouble(crimejsonObject.getString("latitude")), Double.parseDouble(crimejsonObject.getString("longitude")));
+                        mapLastMarker = mMap.addMarker(new MarkerOptions()
+                                .position(newlocation)
+                                .title("New Crime"));
+                        Log.d("LastLocation", String.valueOf(mapLastMarker.getPosition().latitude) +" "+String.valueOf(mapLastMarker.getPosition().longitude));
+                    } catch (Exception ex) {
+
+                    }
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+
+                    Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }) {
+                @Override
+                protected Map<String, String> getParams() throws AuthFailureError {
+                    Map<String, String> parameters = new HashMap<String, String>();
+                    parameters.put("caseid",CASEID);
+                    return parameters;
+                }
+            };
+            request.setRetryPolicy(new DefaultRetryPolicy(DefaultRetryPolicy.DEFAULT_TIMEOUT_MS * 2, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            queue.add(request);
             return null;
         }
-
-
     }
-
 
 
     public void callAsynchronousTask() {
 
         final Handler handler = new Handler();
-        Timer timer = new Timer();
+
+        timer = new Timer();
         TimerTask doAsynchronousTask = new TimerTask() {
             @Override
             public void run() {
@@ -424,9 +452,16 @@ public class CrimeMapActivity extends FragmentActivity implements RoutingListene
                 });
             }
         };
-        timer.schedule(doAsynchronousTask, 0, 1000); //execute in every 50000 ms
+        timer.schedule(doAsynchronousTask, 0, 10000); //execute in every 50000 ms
+        
 
     }
 
 
+    @Override
+    protected void onStop() {
+        //timer.cancel();
+        super.onStop();
+
+    }
 }

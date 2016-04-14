@@ -142,9 +142,10 @@
         android:text="@string/btn_assign"
         android:id="@+id/btnAssign"
         android:onClick="ownerAssign"
+        android:layout_marginTop="10dp"
         android:layout_alignParentLeft="true"
         style="@style/detailmenubtn"
-        android:layout_below="@+id/tblDetails"/>
+        android:layout_below="@+id/btnCloseCase"/>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -161,6 +162,16 @@
         android:layout_height="wrap_content"
         android:text="@string/btn_navigation"
         android:id="@+id/button"
+        android:onClick="showNavigation"
+        android:layout_alignBaseline="@id/btnMap"
+        android:layout_centerHorizontal="true"
+        style="@style/detailmenubtn"
+         />
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_closecase"
+        android:id="@+id/btnCloseCase"
         android:onClick="showNavigation"
         android:layout_below="@+id/tblDetails"
         android:layout_centerHorizontal="true"

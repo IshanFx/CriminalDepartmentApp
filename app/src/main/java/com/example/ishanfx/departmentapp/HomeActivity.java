@@ -4,6 +4,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.Location;
@@ -11,9 +12,12 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -35,6 +39,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.ishanfx.departmentapp.Handler.VariableManager;
 import com.example.ishanfx.departmentapp.database.RealMAdapter;
 import com.example.ishanfx.departmentapp.network.NetworkAdapter;
 import com.google.android.gms.common.ConnectionResult;
@@ -66,7 +71,8 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.C
     List<Crime> crimeLocalList;
     // DepHomeAdapter depHomeAdapter;
     CrimeAdapter depHomeAdapter;
-
+    static int WORK_MODE = 0;
+    View btn_selected;
 
     //Location Stuff
     private LocationManager locationManager;
@@ -108,6 +114,33 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.C
             crimeList = (ListView) findViewById(android.R.id.list);
             crimeList.setAdapter(depHomeAdapter);
             new DepartHomeAsync().execute();
+
+            FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.btnmodechange);
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    btn_selected = view;
+                    AlertDialog.Builder builder = new AlertDialog.Builder(HomeActivity.this);
+                   /* builder.setTitle("Mode");*/
+
+                    builder.setMessage("Change Mode To");
+                    builder.setPositiveButton("Online", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            WORK_MODE = 1;
+                            new changeModeAsync().execute();
+                        }
+                    });
+                    builder.setNegativeButton("Offline", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            WORK_MODE = 0;
+                            new changeModeAsync().execute();
+                        }
+                    });
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+
+                }
+            });
 
             crimeList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
@@ -526,7 +559,10 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.C
             return null;
         }
 
-
+        @Override
+        protected void onPostExecute(Void aVoid) {
+           Toast.makeText(getApplicationContext(),"Last Location Updated",Toast.LENGTH_SHORT).show();
+        }
     }
 
     public class DepartHomeAsync extends AsyncTask<Void, Crime, String> {
@@ -603,6 +639,54 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.C
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             swipeContainer.setRefreshing(false);
+        }
+    }
+
+    public class changeModeAsync extends AsyncTask<Void,Void,Void>{
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            Log.d("OwnerInsert", "work1");
+            RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+
+            StringRequest request = new StringRequest(Request.Method.POST, NetworkAdapter.url_modechange, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
+                        Log.d("OwnerInsert", "work2");
+                       /* JSONObject resposeJSON = new JSONObject(response);
+                        if (resposeJSON.names().get(0).equals("status") ) {
+
+                        }*/
+                    } catch (Exception ex) {
+
+                    }
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+
+                    Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }) {
+                @Override
+                protected Map<String, String> getParams() throws AuthFailureError {
+
+                    Map<String, String> parameters = new HashMap<String, String>();
+                    parameters.put("mode", String.valueOf(WORK_MODE));
+                    parameters.put("ownerid", String.valueOf(userId));
+
+                    return parameters;
+                }
+            };
+            request.setRetryPolicy(new DefaultRetryPolicy(DefaultRetryPolicy.DEFAULT_TIMEOUT_MS * 2, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            queue.add(request);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            new VariableManager().customeToast(btn_selected,"Mode Changed",1);
         }
     }
 }

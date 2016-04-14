@@ -190,6 +190,7 @@ public class RealMAdapter  {
         protectRMDB.commitTransaction();
         Log.d("Realm", "Insert Success " + user.getId());
     }
+
     public class CaseAsync extends AsyncTask<Void,Crime,Void>{
         @Override
         protected Void doInBackground(Void... params) {

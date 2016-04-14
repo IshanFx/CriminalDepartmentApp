@@ -84,6 +84,18 @@ public class AssignActivity extends AppCompatActivity {
         crimeList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Crime crime = (Crime) crimeList.getItemAtPosition(position);
+                Intent intent = new Intent(getApplicationContext(), DetailActivity.class);
+                intent.putExtra("caseid", String.valueOf(crime.getCaseid()));
+                intent.putExtra("activity", "A");
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+            }
+        });
+
+        crimeList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
 
                 finishcrime = (Crime) crimeList.getItemAtPosition(position);
 
@@ -106,6 +118,7 @@ public class AssignActivity extends AppCompatActivity {
                 AlertDialog dialog = builder.create();
 
                 dialog.show();
+                return true;
             }
         });
     }

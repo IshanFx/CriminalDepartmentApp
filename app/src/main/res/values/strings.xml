@@ -19,6 +19,7 @@
     <string name="btn_followmap">Show Map</string>
     <string name="btn_assign">Assign</string>
     <string name="btn_navigation">Navigation</string>
+    <string name="btn_closecase">Close Case</string>
     <string name="title_activity_crime_map">Map</string>
     <string name="title_activity_assign">AssignActivity</string>
     <string name="title_activity_login">Department App</string>
