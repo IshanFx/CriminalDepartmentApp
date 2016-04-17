@@ -1,7 +1,11 @@
 package com.example.ishanfx.departmentapp;
 
 
+import android.content.ComponentName;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
+import android.support.test.espresso.IdlingPolicies;
+import android.support.test.espresso.matcher.LayoutMatchers;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
@@ -10,9 +14,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.sql.Time;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 
 import static android.support.test.InstrumentationRegistry.getInstrumentation;
+import static android.support.test.InstrumentationRegistry.getTargetContext;
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
@@ -20,7 +27,12 @@ import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.swipeDown;
 import static android.support.test.espresso.action.ViewActions.typeText;
+import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.core.deps.guava.base.Preconditions.checkNotNull;
+import static android.support.test.espresso.intent.Intents.intended;
+import static android.support.test.espresso.intent.matcher.IntentMatchers.hasComponent;
+import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.EasyMock2Matchers.equalTo;
@@ -42,11 +54,28 @@ public class MainActivityInstrumentationTest {
             LoginActivity.class);
 
     @Test
-    public void sayHello(){
+    public void testFromLogin(){
+        intended(hasComponent(new ComponentName(getTargetContext(), LoginActivity.class)));
         onView(withId(R.id.email)).perform(typeText(STRING_USEREMAIL), closeSoftKeyboard());
         onView(withId(R.id.password)).perform(typeText(STRING_USERPASSWORD), closeSoftKeyboard());
         onView(withId(R.id.email_sign_in_button)).perform(click());
+        onView(withId(R.id.swipeContainer)).perform(swipeDown());
+        onData(anything()).inAdapterView(withId(R.id.crimeshowlist)).atPosition(0).perform(click());
+        onView(withId(R.id.btnMap)).perform(click());
+        Espresso.pressBack();
+        onView(withId(R.id.btnAssign)).perform(click());
+        onView(withId(R.id.btnCloseCase)).perform(click());
+        Espresso.pressBack();
 
+        onView(withId(R.id.swipeContainer)).perform(swipeDown());
+
+        openActionBarOverflowOrOptionsMenu(getTargetContext());
+        onView(withId(R.id.action_track)).check(doesNotExist()).perform(click());
+        /*onView(withText("Track Me")).perform(click());
+        openActionBarOverflowOrOptionsMenu(getInstrumentation().getTargetContext());
+        onView(withText("Remove Data")).perform(click());
+        openActionBarOverflowOrOptionsMenu(getInstrumentation().getTargetContext());*/
+        //onView(withText("Logout")).perform(click());
         /*onView(withId(R.id.btnRobbery)).perform(click()); //line 1
         onView(withId(R.id.btnKidnap)).perform(click());
         onView(withId(R.id.btnKidnap)).perform(click());
@@ -85,9 +114,21 @@ public class MainActivityInstrumentationTest {
         onView(withId(R.id.button2)).perform(click());*/
     }
 
-    public static Matcher withItemContent(String expectedText) {
-        checkNotNull(expectedText);
-        return withItemContent(equalTo(expectedText));
+    @Test
+    public void testFromHome(){
+
+        onView(withId(R.id.swipeContainer)).perform(swipeDown());
+        onData(anything()).inAdapterView(withId(R.id.crimeshowlist)).atPosition(0).perform(click());
+        onView(withId(R.id.btnMap)).perform(click());
+        Espresso.pressBack();
+        onView(withId(R.id.btnAssign)).perform(click());
+        onView(withId(R.id.btnCloseCase)).perform(click());
+        Espresso.pressBack();
+
+        onView(withId(R.id.swipeContainer)).perform(swipeDown());
+
+        openActionBarOverflowOrOptionsMenu(getTargetContext());
+        //onView(withId(R.id.action_track)).check(doesNotExist()).perform(click());
     }
 
 }

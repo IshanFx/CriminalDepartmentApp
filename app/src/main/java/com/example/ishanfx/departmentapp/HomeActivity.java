@@ -111,7 +111,7 @@ public class HomeActivity extends AppCompatActivity implements GoogleApiClient.C
 
             // depHomeAdapter = new DepHomeAdapter(this, 1, list);
             depHomeAdapter = new CrimeAdapter(this, 1, list);
-            crimeList = (ListView) findViewById(android.R.id.list);
+            crimeList = (ListView) findViewById(R.id.crimeshowlist);
             crimeList.setAdapter(depHomeAdapter);
             new DepartHomeAsync().execute();
 
